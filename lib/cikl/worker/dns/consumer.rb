@@ -1,22 +1,18 @@
 require 'celluloid'
+require 'cikl/worker/base/consumer'
 require 'cikl/worker/dns/resolver'
 require 'unbound'
 
 module Cikl
   module Worker
     module DNS
-      class Consumer
+      class Consumer < Cikl::Worker::Base::Consumer
         include Celluloid
         include Celluloid::Logger
 
-        finalizer :finalize
-        attr_reader :routing_key, :prefetch
-
         def initialize(config)
+          super(config)
           @resolver = Cikl::Worker::DNS::Resolver.new(config)
-
-          @routing_key = config[:jobs_routing_key]
-          @prefetch = config[:job_channel_prefetch]
         end
 
         def finalize
@@ -25,8 +21,6 @@ module Cikl
           @resolver.terminate
           warn "<- Consumer#finalize"
         end
-
-        #execute_block_on_receiver :handle_payload
 
         def handle_payload(payload, amqp, delivery_info)
           query = Unbound::Query.new(payload, 1, 1)
