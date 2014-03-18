@@ -12,11 +12,11 @@ module Cikl
         finalizer :finalize
         attr_reader :routing_key, :prefetch
 
-        def initialize
-          @resolver = Cikl::Worker::DNS::Resolver.new
+        def initialize(config)
+          @resolver = Cikl::Worker::DNS::Resolver.new(config)
 
-          @routing_key = 'cikl.worker.fqdn.jobs'
-          @prefetch = 128
+          @routing_key = config[:jobs_routing_key]
+          @prefetch = config[:job_channel_prefetch]
         end
 
         def finalize

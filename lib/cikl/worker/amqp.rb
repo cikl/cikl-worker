@@ -9,13 +9,8 @@ module Cikl
 
       finalizer :finalize
 
-      def initialize()
-        @bunny = Bunny.new(
-          :host => 'bigboy', 
-          :username => 'guest',
-          :password => 'guest',
-          :vhost => '/'
-        )
+      def initialize(config)
+        @bunny = Bunny.new(config[:amqp])
         @bunny.start
         @consumers = []
       end

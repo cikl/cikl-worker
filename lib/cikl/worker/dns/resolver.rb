@@ -11,10 +11,11 @@ module Cikl
         include Celluloid::Logger
 
         finalizer :finalize
-        def initialize
+        def initialize(config)
           @ctx = Unbound::Context.new
-          @ctx.load_config('config/unbound.conf')
-          @ctx.set_option('root-hints:', 'config/named.root')
+          @ctx.load_config(config[:dns][:unbound_config_file])
+          @ctx.set_option("root-hints:", config[:dns][:root_hints_file])
+          
           @resolver = Unbound::Resolver.new(@ctx)
           @io = @resolver.io
           @tracker = Cikl::Worker::Base::Tracker.new(10)

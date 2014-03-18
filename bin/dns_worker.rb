@@ -23,8 +23,8 @@ lambda do
   end
   config.resolve!
 
-  consumer = Cikl::Worker::DNS::Consumer.new
-  amqp = Cikl::Worker::AMQP.new
+  consumer = Cikl::Worker::DNS::Consumer.new(config)
+  amqp = Cikl::Worker::AMQP.new(config)
   amqp.register_consumer(consumer)
   running = true
   trap(:INT) do
