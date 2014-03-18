@@ -18,7 +18,7 @@ module Cikl
           
           @resolver = Unbound::Resolver.new(@ctx)
           @io = @resolver.io
-          @tracker = Cikl::Worker::Base::Tracker.new(10)
+          @tracker = Cikl::Worker::Base::Tracker.new(config[:job_timeout])
           @resolver.on_finish do |q|
             @tracker.delete(q)
           end
