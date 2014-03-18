@@ -28,7 +28,7 @@ module Cikl
         # each pruned object will be yielded.
         # @param [Time] cutoff_time The time before which object will be considered
         # "old"
-        def prune_old_objects(cutoff_time = Time.now)
+        def prune_old(cutoff_time = Time.now)
           cutoff_time = cutoff_time.to_f
           prune_count = 0
           loop do

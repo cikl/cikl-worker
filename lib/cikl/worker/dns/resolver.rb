@@ -28,7 +28,7 @@ module Cikl
 
         def start_pruner
           every(1) do
-            @tracker.prune_old_objects do |query|
+            @tracker.prune_old do |query|
               exclusive do
                 @resolver.cancel_query(query)
               end
