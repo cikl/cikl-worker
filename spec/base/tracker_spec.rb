@@ -84,11 +84,12 @@ describe Cikl::Worker::Base::Tracker do
     it "should prune objects older than the provided epoch timestamp (float)" do
       mid_time = nil
       1.upto(20) do |i|
-        object = Object.new
-        @tracker.add(object)
+        @tracker.add(i)
 
         if (i == 10)
+          sleep 0.1 # JRuby doesn't handle times < 0.001
           mid_time = Time.now
+          sleep 0.1
         end
       end
 
@@ -108,7 +109,9 @@ describe Cikl::Worker::Base::Tracker do
         end
 
         if (i == 10)
+          sleep 0.1
           mid_time = Time.now
+          sleep 0.1
         end
       end
 
