@@ -1,5 +1,4 @@
 require 'celluloid'
-require 'celluloid/io'
 require 'cikl/worker/base/tracker'
 require 'unbound'
 
@@ -7,7 +6,7 @@ module Cikl
   module Worker
     module DNS
       class Resolver
-        include Celluloid::IO
+        include Celluloid
         include Celluloid::Logger
 
         finalizer :finalize
@@ -39,13 +38,22 @@ module Cikl
         def run
           loop do
             begin
-              ::Celluloid::IO.wait_readable(@io)
+              # Use's ruby's native select because we're not looking to do
+              # anything more than check to see if there's any data sitting 
+              # around for us. We'd use Celluloid::IO, but nio4r in Jruby 
+              # doesn't like Native file descriptors. 
+              if ::Kernel.select([@io], nil, nil, 0)
+                exclusive do
+                  @resolver.process
+                end
+              else 
+                # This is really celluloid's implementation of sleep. It simply
+                # allows for the processing of stuff that's waiting for the actor.
+                sleep 0.1
+              end
             rescue => e
               warn "Caught exception while waiting for io. Resolver probably shutdown: #{e.class} #{e.message}"
               break
-            end
-            exclusive do
-              @resolver.process
             end
           end
         end
