@@ -1,0 +1,10 @@
+---
+:jobs_routing_key: 'cikl.worker.fqdn.jobs'
+:results_routing_key: 'cikl.worker.fqdn.results'
+:amqp:
+  :username: guest
+  :password: guest
+  :host: localhost
+  :port: 5672
+  :vhost: /
+

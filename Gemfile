@@ -5,3 +5,13 @@ gem "bunny"
 gem "unbound", "~> 2.0.0"
 gem "celluloid"
 gem "celluloid-io"
+gem 'configliere'
+
+group :test do
+  gem 'simplecov'
+  gem 'rspec'
+end
+
+group :development do
+  gem 'jeweler'
+end
