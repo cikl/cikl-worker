@@ -1,4 +1,5 @@
 require 'celluloid'
+require 'cikl/worker/logger'
 require 'cikl/worker/dns/resolver'
 require 'unbound'
 
@@ -6,8 +7,8 @@ module Cikl
   module Worker
     module Base
       class Consumer
+        include Cikl::Worker::Logger
         include Celluloid
-        include Celluloid::Logger
 
         finalizer :finalize
         attr_reader :routing_key, :prefetch

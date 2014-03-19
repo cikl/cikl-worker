@@ -1,5 +1,6 @@
 require 'celluloid'
 require 'cikl/worker/base/tracker'
+require 'cikl/worker/logger'
 require 'unbound'
 
 module Cikl
@@ -7,7 +8,7 @@ module Cikl
     module DNS
       class Resolver
         include Celluloid
-        include Celluloid::Logger
+        include Cikl::Worker::Logger
 
         finalizer :finalize
         def initialize(config)

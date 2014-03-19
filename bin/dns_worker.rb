@@ -35,5 +35,5 @@ lambda do
     sleep 0.1
   end
 
-  amqp.terminate
+  amqp.stop
 end.call

@@ -1,49 +1,72 @@
-require 'celluloid'
 require 'bunny'
+require 'cikl/worker/logger'
+require 'thread'
+require 'celluloid'
 
 module Cikl
   module Worker
     class AMQP
-      include Celluloid
-      include Celluloid::Logger
-
-      finalizer :finalize
+      include Cikl::Worker::Logger
 
       def initialize(config)
         @bunny = Bunny.new(config[:amqp])
         @bunny.start
         @consumers = []
+        @ack_queue = Queue.new
+        @acker_thread = start_acker()
+        @mutex = Mutex.new
       end
 
-      def finalize
-        @consumers.each do |consumer, subscription|
-          warn "Canceling Subscription"
-          subscription.cancel
-          warn "Canceled Subscription"
-          warn "Terminating Consumer"
-          consumer.terminate
-          Actor.join(consumer)
-          warn "Terminated Consumer"
+      def start_acker
+        Thread.new do
+          while delivery_info = @ack_queue.pop
+            break if delivery_info == :stop
+            delivery_info.channel.ack(delivery_info.delivery_tag) rescue nil
+          end
         end
-        @consumers.clear
-        @bunny.close
+      end
+
+      def stop
+        @mutex.synchronize do
+          @consumers.each do |consumer, subscription|
+            warn "Canceling Subscription"
+            subscription.cancel
+            warn "Canceled Subscription"
+            warn "Terminating Consumer"
+            consumer.terminate
+            Celluloid::Actor.join(consumer)
+            warn "Terminated Consumer"
+          end
+          @consumers.clear
+          @ack_queue.push(:stop)
+          if @acker_thread.join(2).nil?
+            @acker_thread.kill
+          end
+
+          @bunny.close
+          @bunny = nil
+        end
       end
 
       def ack(delivery_info)
+        info "ACK!"
         delivery_info.channel.ack(delivery_info.delivery_tag)
       end
 
       def register_consumer(consumer)
-        channel = @bunny.channel
-        channel.prefetch(consumer.prefetch)
-        queue = channel.queue(consumer.routing_key, :auto_delete => false)
-        amqp_actor = Actor.current
+        @mutex.synchronize do
+          return if @bunny.nil?
+          channel = @bunny.channel
+          channel.prefetch(consumer.prefetch)
+          queue = channel.queue(consumer.routing_key, :auto_delete => false)
 
-        subscription = queue.subscribe(:blocking => false, :ack => true) do |delivery_info, properties, payload|
-          consumer.handle_payload(payload, amqp_actor, delivery_info)
+          subscription = queue.subscribe(:blocking => false, :ack => true) do |delivery_info, properties, payload|
+            info "Sending query"
+            consumer.handle_payload(payload, self, delivery_info)
+          end
+          @consumers << [consumer, subscription]
+          nil
         end
-        @consumers << [consumer, subscription]
-        nil
       end
     end
 
