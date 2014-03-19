@@ -8,7 +8,7 @@ module WorkerHelper
   CONF_ROOT = SPEC_ROOT.join("conf")
   PROJECT_ROOT =  (SPEC_ROOT + '../').expand_path
   def unbound_config_file(name)
-    CONF_ROOT.join(name).to_s
+    SPEC_ROOT.join("dns/conf").join(name).to_s
   end
   module_function :unbound_config_file
 
