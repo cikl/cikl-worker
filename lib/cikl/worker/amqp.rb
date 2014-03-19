@@ -1,7 +1,6 @@
 require 'bunny'
 require 'cikl/worker/logger'
 require 'thread'
-require 'celluloid'
 
 module Cikl
   module Worker
@@ -33,8 +32,7 @@ module Cikl
             subscription.cancel
             warn "Canceled Subscription"
             warn "Terminating Consumer"
-            consumer.terminate
-            Celluloid::Actor.join(consumer)
+            consumer.stop
             warn "Terminated Consumer"
           end
           @consumers.clear
@@ -49,7 +47,7 @@ module Cikl
       end
 
       def ack(delivery_info)
-        info "ACK!"
+        #info "ACK!"
         delivery_info.channel.ack(delivery_info.delivery_tag)
       end
 
@@ -61,7 +59,6 @@ module Cikl
           queue = channel.queue(consumer.routing_key, :auto_delete => false)
 
           subscription = queue.subscribe(:blocking => false, :ack => true) do |delivery_info, properties, payload|
-            info "Sending query"
             consumer.handle_payload(payload, self, delivery_info)
           end
           @consumers << [consumer, subscription]

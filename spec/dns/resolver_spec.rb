@@ -1,9 +1,7 @@
 require 'spec_helper'
-require 'celluloid'
 require 'cikl/worker/dns/resolver'
 require 'cikl/worker/dns/config'
 require 'unbound'
-require 'timeout'
 
 describe Cikl::Worker::DNS::Resolver do
   include WorkerHelper
@@ -13,41 +11,37 @@ describe Cikl::Worker::DNS::Resolver do
     ret
   }
 
-  class LatchActor
-    include Celluloid
-  end
-
-  before :each do
-    Celluloid.shutdown
-    Celluloid.boot
-  end
-
-  after :each do
-    Celluloid.shutdown
-  end
-
-  it "should be able to get an answer for a query" do
-    query = Unbound::Query.new('fakedomain.local.', 1, 1)
-
-    result = nil
-    latch = LatchActor.new
-
-    query.on_finish do 
-      latch.async.terminate
-    end
-    query.on_answer do |q, r|
-      result = r
-    end
-    resolver = Cikl::Worker::DNS::Resolver.new(config)
-    resolver.send_query(query)
-
-    timeout(2) do
-      Celluloid::Actor.join(latch)
+  context "a runing resolver" do
+    before :each do
+      @resolver = Cikl::Worker::DNS::Resolver.new(config)
+      @resolver.start
     end
 
-    expect(result).not_to be_nil
+    after :each do
+      @resolver.stop
+    end
+
+    it "should be able to get an answer for a query" do
+      query = Unbound::Query.new('fakedomain.local.', 1, 1)
+
+      result = nil
+      latch = Thread.new { sleep }
+
+      query.on_finish do 
+        latch.wakeup
+      end
+      query.on_answer do |q, r|
+        result = r
+      end
+
+      @resolver.send_query(query)
+
+      latch.join(2)
+
+      expect(result).not_to be_nil
+    end
   end
+
 end
-
 
 

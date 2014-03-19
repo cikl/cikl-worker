@@ -1,80 +1,121 @@
-require 'celluloid'
 require 'cikl/worker/base/tracker'
 require 'cikl/worker/logger'
 require 'unbound'
+require 'thread'
 
 module Cikl
   module Worker
     module DNS
       class Resolver
-        include Celluloid
         include Cikl::Worker::Logger
 
-        finalizer :finalize
         def initialize(config)
           @ctx = Unbound::Context.new
           @ctx.load_config(config[:dns][:unbound_config_file])
           @ctx.set_option("root-hints:", config[:dns][:root_hints_file])
           
+          @running = false
           @resolver = Unbound::Resolver.new(@ctx)
+          @resolver_mutex = Mutex.new
           @io = @resolver.io
-          @tracker = Cikl::Worker::Base::Tracker.new(config[:job_timeout])
+          @timeout = config[:job_timeout]
+          @tracker = Cikl::Worker::Base::Tracker.new(@timeout)
           @resolver.on_finish do |q|
             @tracker.delete(q)
           end
-          async.start_pruner
-          async.run
+
+          @processing_thread = nil
+          @pruning_thread = nil
         end
 
-        def start_pruner
-          every(1) do
-            oldstuff = @tracker.prune_old
-            oldstuff.each do |query|
-              exclusive do
+        def run_processor
+          while @running == true
+            begin
+              if ::Kernel.select([@io], nil, nil, 1)
+                @resolver_mutex.synchronize do
+                  @resolver.process
+                end
+              end
+            rescue => e
+              # :nocov:
+              warn "Caught exception while waiting for io. Resolver probably shutdown: #{e.class} #{e.message}"
+              # :nocov:
+              break
+            end
+          end
+          debug "Resolver#run_processor finished"
+        end
+        private :run_processor
+
+        def run_pruner
+          while @running == true
+            next_prune = @tracker.next_prune
+            sleep_time = nil
+            now = Time.now
+            if next_prune.nil?
+              sleep_time = @timeout
+            elsif next_prune > now
+              sleep_time = next_prune - now
+            end
+
+            if sleep_time
+              debug "Sleeping #{sleep_time} seconds"
+              sleep sleep_time
+              next
+            end
+
+            old_queries = @tracker.prune_old
+            debug "Pruning #{old_queries.count} old queries"
+
+            old_queries.each do |query|
+              @resolver_mutex.synchronize do
                 @resolver.cancel_query(query)
               end
             end
           end
         end
-
-        def run
-          loop do
-            begin
-              # Use's ruby's native select because we're not looking to do
-              # anything more than check to see if there's any data sitting 
-              # around for us. We'd use Celluloid::IO, but nio4r in Jruby 
-              # doesn't like Native file descriptors. 
-              if ::Kernel.select([@io], nil, nil, 0)
-                exclusive do
-                  @resolver.process
-                end
-              else 
-                # This is really celluloid's implementation of sleep. It simply
-                # allows for the processing of stuff that's waiting for the actor.
-                sleep 0.1
-              end
-            rescue => e
-              warn "Caught exception while waiting for io. Resolver probably shutdown: #{e.class} #{e.message}"
-              break
-            end
-          end
-        end
+        private :run_pruner
 
         def send_query(query)
-          @tracker.add(query)
-          exclusive do
+          @resolver_mutex.synchronize do
+            return if @running == false
+            @tracker.add(query)
             @resolver.send_query(query)
           end
         end
 
-        def finalize
-          warn "-> Resolver#finalize"
-          exclusive do
-            @resolver.close
-            warn "-> real resolver terminated"
-            @resolver = nil
-            warn "<- Resolver#finalize"
+        def stop
+          return if @running == false
+          debug "-> Resolver#stop"
+          @running = false
+          @pruning_thread.wakeup rescue ThreadError
+          
+          if @pruning_thread.join(2).nil?
+            # :nocov:
+            warn "Killing pruning thread"
+            @pruning_thread.kill
+            # :nocov:
           end
+          if @processing_thread.join(5).nil?
+            # :nocov:
+            warn "Killing processing thread"
+            @processing_thread.kill
+            # :nocov:
+          end
+          @resolver.close
+          @resolver = nil
+          debug "<- Resolver#stop"
+        end
+
+        def start
+          @running = true
+          @processing_thread = Thread.new do
+            run_processor()
+          end
+          @pruning_thread = Thread.new do
+            run_pruner()
+          end
+          nil
         end
       end
     end

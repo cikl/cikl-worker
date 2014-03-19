@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 require File.expand_path('../../config/environment', __FILE__)
 
-require 'celluloid/autostart'
 require 'cikl/worker/dns/config'
 require 'cikl/worker/dns/consumer'
 require 'cikl/worker/amqp'

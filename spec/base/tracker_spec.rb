@@ -24,6 +24,47 @@ describe Cikl::Worker::Base::Tracker do
     end
   end
 
+  describe "#next_prune" do
+    it "should return nil if the tracker is empty" do
+      expect(@tracker.next_prune).to be_nil
+    end
+    it "should return a Time object" do
+      @tracker.add(Object.new)
+      expect(@tracker.next_prune).to be_a(Time)
+    end
+    it "should return time for when the next prune should occur" do
+      expected_deadline = Time.now + @timeout
+      @tracker.add(Object.new)
+      expect(@tracker.next_prune).to be_within(1.0).of(expected_deadline)
+    end
+  end
+
+  describe "#first" do
+    it "should return nil if the tracker is empty" do
+      expect(@tracker.first).to be_nil
+    end
+    it "should return the first object in the tracker by age" do
+      obj1 = Object.new
+      obj2 = Object.new
+      obj3 = Object.new
+      @tracker.add(obj1)
+      @tracker.add(obj2)
+      @tracker.add(obj3)
+      expect(@tracker.first).to be(obj1)
+    end
+    it "should return the first available object if those before it have been deleted" do
+      obj1 = Object.new
+      obj2 = Object.new
+      obj3 = Object.new
+      @tracker.add(obj1)
+      @tracker.add(obj2)
+      @tracker.add(obj3)
+      @tracker.delete(obj1)
+      @tracker.delete(obj2)
+      expect(@tracker.first).to be(obj3)
+    end
+  end
+
   describe "#count" do
     it "should be 0 at first" do
       expect(@tracker.count).to eq(0)
@@ -81,6 +122,10 @@ describe Cikl::Worker::Base::Tracker do
   end
 
   describe "#prune_old" do
+    it "should return an empty array if there's nothing to prune" do
+      expect(@tracker.prune_old).to eq([])
+    end
+
     it "should prune objects older than the provided epoch timestamp (float)" do
       mid_time = nil
       1.upto(20) do |i|
