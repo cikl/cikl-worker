@@ -24,7 +24,6 @@ else
     gem.authors = ["Mike Ryan"]
     gem.bindir = 'bin'
     gem.executables << 'dns_worker.rb'
-    gem.executables << 'dns_worker_control.rb'
     gem.files  = Dir.glob("lib/**/*.rb") + 
       Dir.glob("bin/{*.rb}") + 
       Dir.glob("config/*") + 
