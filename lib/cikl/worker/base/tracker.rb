@@ -30,7 +30,7 @@ module Cikl
         # "old"
         def prune_old(cutoff_time = Time.now)
           cutoff_time = cutoff_time.to_f
-          prune_count = 0
+          ret = []
           loop do
             break if @oids.empty?
             oid = @oids.first
@@ -51,16 +51,9 @@ module Cikl
             # Delete the entry
             @oid_entry_map.delete(oid)
 
-            prune_count += 1
-
-            if block_given?
-              yield entry.object
-            end
+            ret << entry.object
           end
-
-          if prune_count > 0
-            warn "Pruned #{prune_count}, #{count} remaining"
-          end
+          ret
         end
 
         def has?(object)

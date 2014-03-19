@@ -94,11 +94,12 @@ describe Cikl::Worker::Base::Tracker do
       end
 
       expect(@tracker.count).to eq(20)
-      @tracker.prune_old(mid_time + @timeout)
+      ret = @tracker.prune_old(mid_time + @timeout)
+      expect(ret.count).to eq(10)
       expect(@tracker.count).to eq(10)
     end
 
-    it "should yield each pruned object if a block is given" do 
+    it "should return each pruned object" do 
       mid_time = nil
       expected_objects = []
       1.upto(20) do |i|
@@ -116,10 +117,7 @@ describe Cikl::Worker::Base::Tracker do
       end
 
       expect(@tracker.count).to eq(20)
-      actual_objects = []
-      @tracker.prune_old(mid_time + @timeout) do |object|
-        actual_objects << object
-      end
+      actual_objects = @tracker.prune_old(mid_time + @timeout)
       expect(@tracker.count).to eq(10)
       expect(actual_objects).to match_array(expected_objects)
     end
