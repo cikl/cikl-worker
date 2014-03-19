@@ -24,10 +24,10 @@ lambda do
   end
   config.resolve!
 
-  job_builder = Cikl::Worker::DNS::JobBuilder.new
-  processor = Cikl::Worker::DNS::Processor.new(config)
-  consumer = Cikl::Worker::Base::Consumer.new(processor, job_builder, config)
   amqp = Cikl::Worker::AMQP.new(config)
+  job_builder = Cikl::Worker::DNS::JobBuilder.new
+  processor = Cikl::Worker::DNS::Processor.new(amqp.job_result_handler, config)
+  consumer = Cikl::Worker::Base::Consumer.new(processor, job_builder, config)
   amqp.register_consumer(consumer)
   running = true
   trap(:INT) do

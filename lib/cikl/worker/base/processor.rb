@@ -8,7 +8,8 @@ module Cikl
       class Processor 
         include Cikl::Worker::Logging
 
-        def initialize(config)
+        def initialize(job_result_handler, config)
+          @job_result_handler = job_result_handler
           @timeout = config[:job_timeout]
           @tracker = Cikl::Worker::Base::Tracker.new(@timeout)
           @running = true
@@ -19,6 +20,9 @@ module Cikl
 
         def job_finished(job, result)
           @tracker.delete(job)
+          if result
+            @job_result_handler.handle_job_result(result)
+          end
         end
 
         def run_pruner

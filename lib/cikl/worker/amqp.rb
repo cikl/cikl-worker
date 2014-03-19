@@ -1,15 +1,20 @@
 require 'bunny'
 require 'cikl/worker/logging'
+require 'cikl/worker/base/job_result_amqp_producer'
 require 'thread'
 
 module Cikl
   module Worker
     class AMQP
       include Cikl::Worker::Logging
+      attr_reader :job_result_handler
 
       def initialize(config)
         @bunny = Bunny.new(config[:amqp])
         @bunny.start
+        @job_result_handler = 
+          Cikl::Worker::Base::JobResultAMQPProducer.new(
+            @bunny.channel.default_exchange, config[:results_routing_key])
         @consumers = []
         @ack_queue = Queue.new
         @acker_thread = start_acker()
