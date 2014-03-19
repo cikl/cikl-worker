@@ -1,6 +1,4 @@
 require 'cikl/worker/logging'
-require 'cikl/worker/dns/resolver'
-require 'unbound'
 
 module Cikl
   module Worker
@@ -10,15 +8,29 @@ module Cikl
 
         attr_reader :routing_key, :prefetch
 
-        def initialize(config)
+        def initialize(processor, builder, config)
+          @processor = processor
+          @builder = builder
           @routing_key = config[:jobs_routing_key]
           @prefetch = config[:job_channel_prefetch]
         end
 
-        def finalize
+        def stop
+          debug "-> Consumer#stop"
+          debug "Processor: stopping"
+          @processor.stop
+          debug "Processor: stopped"
+          debug "<- Consumer#stop"
         end
 
         def handle_payload(payload, amqp, delivery_info)
+          on_finish_cb = Proc.new do |j, r|
+            #info "Finished: #{payload}"
+            amqp.ack(delivery_info) rescue nil
+            @processor.job_finished(j, r)
+          end
+          job = @builder.build(payload, :on_finish => on_finish_cb)
+          @processor.process_job(job)
         end
       end
 

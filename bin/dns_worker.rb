@@ -2,7 +2,9 @@
 require File.expand_path('../../config/environment', __FILE__)
 
 require 'cikl/worker/dns/config'
-require 'cikl/worker/dns/consumer'
+require 'cikl/worker/dns/job_builder'
+require 'cikl/worker/dns/processor'
+require 'cikl/worker/base/consumer'
 require 'cikl/worker/amqp'
 
 #Celluloid.task_class = Celluloid::TaskThread
@@ -22,7 +24,9 @@ lambda do
   end
   config.resolve!
 
-  consumer = Cikl::Worker::DNS::Consumer.new(config)
+  job_builder = Cikl::Worker::DNS::JobBuilder.new
+  processor = Cikl::Worker::DNS::Processor.new(config)
+  consumer = Cikl::Worker::Base::Consumer.new(processor, job_builder, config)
   amqp = Cikl::Worker::AMQP.new(config)
   amqp.register_consumer(consumer)
   running = true
