@@ -1,4 +1,4 @@
-require 'cikl/worker/logger'
+require 'cikl/worker/logging'
 require 'cikl/worker/dns/resolver'
 require 'unbound'
 
@@ -6,7 +6,7 @@ module Cikl
   module Worker
     module Base
       class Consumer
-        include Cikl::Worker::Logger
+        include Cikl::Worker::Logging
 
         attr_reader :routing_key, :prefetch
 

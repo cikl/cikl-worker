@@ -1,5 +1,5 @@
 require 'cikl/worker/base/tracker'
-require 'cikl/worker/logger'
+require 'cikl/worker/logging'
 require 'unbound'
 require 'thread'
 
@@ -7,7 +7,7 @@ module Cikl
   module Worker
     module DNS
       class Resolver
-        include Cikl::Worker::Logger
+        include Cikl::Worker::Logging
 
         def initialize(config)
           @ctx = Unbound::Context.new

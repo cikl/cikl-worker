@@ -14,7 +14,7 @@ module Cikl
       Cikl::Worker.logger = _logger
     end.call()
 
-    module Logger
+    module Logging
       def error(msg)
         Cikl::Worker.logger.error(msg) if Cikl::Worker.logger
       end

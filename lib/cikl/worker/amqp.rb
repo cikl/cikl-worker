@@ -1,11 +1,11 @@
 require 'bunny'
-require 'cikl/worker/logger'
+require 'cikl/worker/logging'
 require 'thread'
 
 module Cikl
   module Worker
     class AMQP
-      include Cikl::Worker::Logger
+      include Cikl::Worker::Logging
 
       def initialize(config)
         @bunny = Bunny.new(config[:amqp])
