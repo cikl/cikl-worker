@@ -13,6 +13,10 @@ manner.
 rake spec
 ```
 
+## Repository
+
+* https://github.com/cikl/cikl-worker/
+
 ## Contributors
 
 * [Mike Ryan](https://github.com/justfalter)
