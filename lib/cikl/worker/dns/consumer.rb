@@ -1,5 +1,6 @@
 require 'cikl/worker/base/consumer'
 require 'cikl/worker/dns/resolver'
+require 'cikl/worker/dns/job'
 require 'unbound'
 
 module Cikl
@@ -20,12 +21,14 @@ module Cikl
         end
 
         def handle_payload(payload, amqp, delivery_info)
-          query = Unbound::Query.new(payload, 1, 1)
-          query.on_finish do |q,r|
-            # If the ack fails, it's because the channel_actor has been shutdown
+          on_finish_cb = Proc.new { 
+            warn "Finished: #{payload}"
             amqp.ack(delivery_info) rescue nil
+          }
+          job = Cikl::Worker::DNS::Job.new(payload, :on_finish => on_finish_cb)
+          job.each_remaining_query do |query|
+            @resolver.send_query(query)
           end
-          @resolver.send_query(query)
         end
       end
 
