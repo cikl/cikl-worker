@@ -39,10 +39,11 @@ describe Cikl::Worker::DNS::Resolver do
   describe "#cancel_query" do
     it "should call Unbound::Resolver#cancel_query" do
       query = Unbound::Query.new('fakedomain.local.', 1, 1)
-      expect(query).to receive(:cancel!).and_call_original
+      expect_any_instance_of(Unbound::Resolver).to receive(:cancel_query).with(query).and_call_original
       @resolver.start
       @resolver.send_query(query)
       @resolver.cancel_query(query)
+      sleep 1
     end
   end
 
