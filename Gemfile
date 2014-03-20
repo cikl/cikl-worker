@@ -6,6 +6,7 @@ gem "unbound", "~> 2.0.0"
 gem 'configliere'
 
 group :test do
+  gem 'rake'
   gem 'simplecov'
   gem 'rspec'
 end
