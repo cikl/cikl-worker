@@ -18,9 +18,13 @@ module Cikl
           end
         end
 
+        # returns the number of jobs currently processing
+        def num_jobs_processing
+          @tracker.count
+        end
+
         def job_finished(job, result)
-          @tracker.delete(job)
-          if result
+          if @tracker.delete(job) && result
             @job_result_handler.handle_job_result(result)
           end
         end
@@ -72,6 +76,10 @@ module Cikl
 
         def process_job(job)
           @tracker.add(job)
+          if @tracker.count == 1
+            # This helps ensure that the 
+            @pruning_thread.wakeup
+          end
         end
       end
 

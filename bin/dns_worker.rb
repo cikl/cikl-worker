@@ -4,6 +4,7 @@ require File.expand_path('../../config/environment', __FILE__)
 require 'cikl/worker/dns/config'
 require 'cikl/worker/dns/job_builder'
 require 'cikl/worker/dns/processor'
+require 'cikl/worker/dns/resolver'
 require 'cikl/worker/base/consumer'
 require 'cikl/worker/amqp'
 
@@ -26,7 +27,8 @@ lambda do
 
   amqp = Cikl::Worker::AMQP.new(config)
   job_builder = Cikl::Worker::DNS::JobBuilder.new
-  processor = Cikl::Worker::DNS::Processor.new(amqp.job_result_handler, config)
+  resolver = Cikl::Worker::DNS::Resolver.new(config)
+  processor = Cikl::Worker::DNS::Processor.new(resolver, amqp.job_result_handler, config)
   consumer = Cikl::Worker::Base::Consumer.new(processor, job_builder, config)
   amqp.register_consumer(consumer)
   running = true

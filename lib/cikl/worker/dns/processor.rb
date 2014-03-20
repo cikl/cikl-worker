@@ -7,8 +7,8 @@ module Cikl
     module DNS
       class Processor < Cikl::Worker::Base::Processor
 
-        def initialize(job_result_handler, config)
-          @resolver = Cikl::Worker::DNS::Resolver.new(config)
+        def initialize(resolver, job_result_handler, config)
+          @resolver = resolver
           @resolver.start
           super(job_result_handler, config)
         end
