@@ -14,7 +14,7 @@ module Cikl
         @bunny.start
         @job_result_handler = 
           Cikl::Worker::Base::JobResultAMQPProducer.new(
-            @bunny.channel.default_exchange, config[:results_routing_key])
+            @bunny.default_channel.default_exchange, config[:results_routing_key])
         @consumers = []
         @ack_queue = Queue.new
         @acker_thread = start_acker()
@@ -25,7 +25,7 @@ module Cikl
         Thread.new do
           while delivery_info = @ack_queue.pop
             break if delivery_info == :stop
-            delivery_info.channel.ack(delivery_info.delivery_tag) rescue nil
+            delivery_info.channel.ack(delivery_info.delivery_tag)
           end
         end
       end
@@ -43,7 +43,9 @@ module Cikl
           @consumers.clear
           @ack_queue.push(:stop)
           if @acker_thread.join(2).nil?
+            # :nocov:
             @acker_thread.kill
+            # :nocov:
           end
 
           @bunny.close
@@ -52,8 +54,7 @@ module Cikl
       end
 
       def ack(delivery_info)
-        #info "ACK!"
-        delivery_info.channel.ack(delivery_info.delivery_tag)
+        @ack_queue.push(delivery_info)
       end
 
       def register_consumer(consumer)
