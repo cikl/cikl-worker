@@ -6,6 +6,8 @@ rvm:
   - jruby-19mode
 # - jruby-20mode  # So slow
 
+services: rabbitmq
+
 env:
     global:
       - JRUBY_OPTS=--debug
