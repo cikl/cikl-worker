@@ -21,10 +21,14 @@ module Cikl
           @processing_thread = nil
         end
 
+        def running?
+          @running == true
+        end
+
         def run_processor
           while @running == true
             begin
-              if ::Kernel.select([@io], nil, nil, 1)
+              if ::Kernel.select([@io], nil, nil, 0.5)
                 @resolver_mutex.synchronize do
                   @resolver.process
                 end
@@ -32,8 +36,8 @@ module Cikl
             rescue => e
               # :nocov:
               warn "Caught exception while waiting for io. Resolver probably shutdown: #{e.class} #{e.message}"
-              # :nocov:
               break
+              # :nocov:
             end
           end
           debug "Resolver#run_processor finished"
@@ -41,15 +45,13 @@ module Cikl
         private :run_processor
 
         def cancel_query(query)
-          @resolver_mutex.lock
-          @resolver.cancel_query(query)
-        ensure 
-          @resolver_mutex.unlock
+          @resolver_mutex.synchronize do
+            @resolver.cancel_query(query)
+          end
         end
 
         def send_query(query)
           @resolver_mutex.synchronize do
-            return if @running == false
             @resolver.send_query(query)
           end
         end
