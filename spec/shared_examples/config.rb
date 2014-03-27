@@ -5,6 +5,7 @@ shared_examples_for "a default config" do
   its(:jobs_routing_key) { should be_nil }
   its(:job_timeout) { should eq(10.0)}
   its(:job_channel_prefetch) { should eq(128)}
+  its(:worker_name) { should eq( ENV["HOSTNAME"] || Socket.gethostname || "unknown") }
 
   context :amqp do
     subject { config[:amqp] }

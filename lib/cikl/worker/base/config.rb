@@ -1,4 +1,5 @@
 require 'configliere'
+require 'socket'
 module Cikl
   module Worker
     module Base
@@ -25,6 +26,18 @@ module Cikl
                         :description => "The number of jobs that will be processed at a given time",
                         :default => 128,
                         :required => true
+
+          config.define :worker_name,
+                        :type => String,
+                        :description => "The name of the worker",
+                        :env_var => 'HOSTNAME',
+                        :finally => lambda { |c|
+                          # :nocov:
+                          if c[:worker_name].nil?
+                            c[:worker_name] = Socket.gethostname || 'unknown'
+                          end
+                          # :nocov:
+                        }
 
 
           config.define "amqp.host",

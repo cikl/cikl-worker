@@ -15,6 +15,7 @@ module AMQPSpec
   class Payload < Cikl::Worker::Base::JobResultPayload
     attr_reader :value
     def initialize(value)
+      super()
       @value = value
     end
 
@@ -23,7 +24,7 @@ module AMQPSpec
     end
 
     def to_hash
-      {:value => @value}
+      super().merge({:value => @value})
     end
   end
   class Result 
@@ -68,7 +69,9 @@ describe Cikl::Worker::AMQP do
   include WorkerHelper
 
   before :all do
+    @worker_name = "my_worker_name"
     @config = Cikl::Worker::Base::Config.create_config(WorkerHelper::PROJECT_ROOT)
+    @config.worker_name = @worker_name
     now = Time.now.to_f
     @config[:jobs_routing_key] = "cikl.testing.#{now.to_s}.jobs"
     @config[:results_routing_key] = "cikl.testing.#{now.to_s}.results"
@@ -128,7 +131,12 @@ describe Cikl::Worker::AMQP do
         100.times do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
-          expected_payload = {"value" => "processed: " + payload}
+          expected_payload = {
+            "value" => "processed: " + payload,
+            "worker" => @worker_name,
+            "time" => kind_of(String)
+
+          }
           expected_payloads << expected_payload
         end
         sleep 1
@@ -137,7 +145,7 @@ describe Cikl::Worker::AMQP do
           delivery_info, properties, payload = @results_queue.pop
           actual_payloads << MultiJson.decode(payload)
         end
-        expect(actual_payloads).to match_array(expected_payloads)
+        expect(expected_payloads).to eq(actual_payloads)
       end
 
       it "should nack payloads when an error occurs while building a job" do
@@ -145,25 +153,29 @@ describe Cikl::Worker::AMQP do
         routing_key = @config[:jobs_routing_key]
         expected_payloads = []
         actual_payloads = []
-        expect(amqp).to receive(:ack).exactly(50).times.and_call_original
-        expect(amqp).to receive(:nack).exactly(50).times.and_call_original
-        50.times do
+        expect(amqp).to receive(:ack).exactly(1).times.and_call_original
+        expect(amqp).to receive(:nack).exactly(1).times.and_call_original
+        1.times do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
-          expected_payload = {"value" => "processed: " + payload}
+          expected_payload = {
+            "value" => "processed: " + payload,
+            "worker" => @worker_name,
+            "time" => kind_of(String)
+          }
           expected_payloads << expected_payload
         end
-        50.times do
+        1.times do
           payload = "RAISE_ERROR"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
         end
         sleep 1
-        expect(@results_queue.message_count).to eq(50)
-        50.times do
+        expect(@results_queue.message_count).to eq(1)
+        1.times do
           delivery_info, properties, payload = @results_queue.pop
           actual_payloads << MultiJson.decode(payload)
         end
-        expect(actual_payloads).to match_array(expected_payloads)
+        expect(expected_payloads).to eq(actual_payloads)
       end
 
     end

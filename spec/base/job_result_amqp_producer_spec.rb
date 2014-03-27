@@ -23,8 +23,9 @@ describe Cikl::Worker::Base::JobResultAMQPProducer do
     }
     let(:exchange) { double("exchange") }
     let(:routing_key) { double("some.routing.key") }
+    let(:worker_name) { "my_worker_name" }
     let(:job_result_producer) { 
-      Cikl::Worker::Base::JobResultAMQPProducer.new(exchange, routing_key)
+      Cikl::Worker::Base::JobResultAMQPProducer.new(exchange, routing_key, worker_name)
     } 
 
     it "should publish the result payload to the exchange" do
@@ -33,6 +34,8 @@ describe Cikl::Worker::Base::JobResultAMQPProducer do
       encoded1 = MultiJson.dump(payload1.to_hash)
       encoded2 = MultiJson.dump(payload2.to_hash)
       expect(job_result).to receive(:payloads).and_return([payload1, payload2])
+      expect(payload1).to receive(:stamp).with(worker_name, kind_of(DateTime)).and_call_original
+      expect(payload2).to receive(:stamp).with(worker_name, kind_of(DateTime)).and_call_original
       expect(exchange).to receive(:publish).with(encoded1, :routing_key => routing_key)
       expect(exchange).to receive(:publish).with(encoded2, :routing_key => routing_key)
       job_result_producer.handle_job_result(job_result)

@@ -14,7 +14,10 @@ module Cikl
         @bunny.start
         @job_result_handler = 
           Cikl::Worker::Base::JobResultAMQPProducer.new(
-            @bunny.default_channel.default_exchange, config[:results_routing_key])
+            @bunny.default_channel.default_exchange, 
+            config[:results_routing_key],
+            config[:worker_name]
+        )
         @consumers = []
         @ack_queue = Queue.new
         @acker_thread = start_acker()
