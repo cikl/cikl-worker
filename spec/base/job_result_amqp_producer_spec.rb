@@ -13,8 +13,9 @@ describe Cikl::Worker::Base::JobResultAMQPProducer do
     } 
 
     it "should publish the result payload to the exchange" do
-      expect(job_result).to receive(:to_payload).and_return("some payload")
-      expect(exchange).to receive(:publish).with("some payload", :routing_key => routing_key)
+      expect(job_result).to receive(:payloads).and_return(["some payload1", "some payload2"])
+      expect(exchange).to receive(:publish).with("some payload1", :routing_key => routing_key)
+      expect(exchange).to receive(:publish).with("some payload2", :routing_key => routing_key)
       job_result_producer.handle_job_result(job_result)
     end
   end

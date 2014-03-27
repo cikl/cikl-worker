@@ -11,7 +11,7 @@ module Cikl
         def initialize(name)
           @name = name
           @start = Time.now
-          @rr = []
+          @records = []
         end
 
         def push(name, ttl, rr)
@@ -21,26 +21,31 @@ module Cikl
             rr.class::TypeValue,
             ttl
           ]
+          ret2 = { 
+            :name => name.to_s ,
+            :rr_class => rr.class::ClassValue,
+            :rr_type => rr.class::TypeValue
+          }
           case rr
           when Resolv::DNS::Resource::IN::A
-            ret << rr.address.to_s.downcase
+            ret2[:ipv4] = rr.address.to_s.downcase
           when Resolv::DNS::Resource::IN::AAAA
-            ret << rr.address.to_s.downcase
+            ret2[:ipv6] = rr.address.to_s.downcase
           when Resolv::DNS::Resource::IN::CNAME
             #:nocov:
-            ret << rr.name.to_s.downcase
+            ret2[:cname] = rr.name.to_s.downcase
             #:nocov:
           when Resolv::DNS::Resource::IN::NS
-            ret << rr.name.to_s.downcase
+            ret2[:ns] = rr.name.to_s.downcase
           when Resolv::DNS::Resource::IN::MX
-            ret << rr.exchange.to_s.downcase
+            ret2[:mx] = rr.exchange.to_s.downcase
           else 
             #:nocov:
             return
             #:nocov:
           end
 
-          @rr << ret
+          @records << ret2
         end
         private :push
 
@@ -67,12 +72,8 @@ module Cikl
           end
         end
 
-        def to_payload
-          MultiJson.dump({
-            name: @name,
-            time: @start.to_i,
-            rr: @rr
-          })
+        def payloads
+          @records.map { |record| MultiJson.dump(record) }
         end
       end
 

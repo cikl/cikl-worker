@@ -15,10 +15,12 @@ module Cikl
           @routing_key = routing_key
         end
 
-        # Process a job result, publishing it to an exchange
+        # Process a job result, publishing its payloads to an exchange
         # @param [Cikl::Worker::Base::JobResult] job_result
         def handle_job_result(job_result)
-          @exchange.publish(job_result.to_payload, :routing_key => @routing_key)
+          job_result.payloads.each do |payload|
+            @exchange.publish(payload, :routing_key => @routing_key)
+          end
         end
       end
     end

@@ -41,66 +41,61 @@ describe Cikl::Worker::DNS::JobResult do
       before :each do
         job_result.handle_query_answer(query_ns, answer_ns)
       end
-      describe "#to_payload" do
+      describe "#payloads" do
         before :each do
-          @payload = job_result.to_payload
-        end
-        subject {@payload} 
-        it {should be_a(::String)}
-        context "when json decoded" do
-          before :each do
-            @decoded= MultiJson.load(@payload)
-          end
-          subject {@decoded}
-          its(["name"]) { should eq('google.com') }
-          its(["time"]) { should be_a(Integer) }
-          its(["rr"]) { should be_a(Array) }
-          context "rr" do
-            subject {@decoded["rr"]}
-            its([0]) { should eq(["google.com", 1, 2, 345576, "ns3.google.com"]) }
-            its([1]) { should eq(["google.com", 1, 2, 345576, "ns4.google.com"]) }
-            its([2]) { should eq(["google.com", 1, 2, 345576, "ns1.google.com"]) }
-            its([3]) { should eq(["google.com", 1, 2, 345576, "ns2.google.com"]) }
-          end
+          @payloads = job_result.payloads
         end
 
+        specify "there should be 4 payloads, total" do
+          expect(@payloads.length).to eq(4)
+        end
+
+        specify "the decoded payloads should match the proper NS records" do
+          decoded = @payloads.map {|payload| MultiJson.decode(payload) }
+          expect(decoded).to match_array(
+            [
+              { "name" => 'google.com', 'ns' => 'ns1.google.com', "rr_class" => 1, "rr_type" => 2},
+              { "name" => 'google.com', 'ns' => 'ns2.google.com', "rr_class" => 1, "rr_type" => 2},
+              { "name" => 'google.com', 'ns' => 'ns3.google.com', "rr_class" => 1, "rr_type" => 2},
+              { "name" => 'google.com', 'ns' => 'ns4.google.com', "rr_class" => 1, "rr_type" => 2},
+            ]
+          )
+        end
       end
+
     end
 
     context "an A query" do
       before :each do
         job_result.handle_query_answer(query_a, answer_a)
       end
-      describe "#to_payload" do
+      describe "#payloads" do
         before :each do
-          @payload = job_result.to_payload
-        end
-        subject {@payload} 
-        it {should be_a(::String)}
-        context "when json decoded" do
-          before :each do
-            @decoded= MultiJson.load(@payload)
-          end
-          subject {@decoded}
-          its(["name"]) { should eq('google.com') }
-          its(["time"]) { should be_a(Integer) }
-          its(["rr"]) { should be_a(Array) }
-          context "rr" do
-            subject {@decoded["rr"]}
-            its([0]) { should eq(["google.com", 1, 1, 157, "173.194.46.35"]) }
-            its([1]) { should eq(["google.com", 1, 1, 157, "173.194.46.41"]) }
-            its([2]) { should eq(["google.com", 1, 1, 157, "173.194.46.39"]) }
-            its([3]) { should eq(["google.com", 1, 1, 157, "173.194.46.37"]) }
-            its([4]) { should eq(["google.com", 1, 1, 157, "173.194.46.46"]) }
-            its([5]) { should eq(["google.com", 1, 1, 157, "173.194.46.33"]) }
-            its([6]) { should eq(["google.com", 1, 1, 157, "173.194.46.38"]) }
-            its([7]) { should eq(["google.com", 1, 1, 157, "173.194.46.40"]) }
-            its([8]) { should eq(["google.com", 1, 1, 157, "173.194.46.36"]) }
-            its([9]) { should eq(["google.com", 1, 1, 157, "173.194.46.32"]) }
-            its([10]) { should eq(["google.com", 1, 1, 157, "173.194.46.34"]) }
-          end
+          @payloads = job_result.payloads
         end
 
+        specify "there should be 11 payloads, total" do
+          expect(@payloads.length).to eq(11)
+        end
+
+        specify "the decoded payloads should match the proper A records" do
+          decoded = @payloads.map {|payload| MultiJson.decode(payload) }
+          expect(decoded).to match_array(
+            [
+              {"name" => "google.com", "ipv4" => "173.194.46.35", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.41", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.39", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.37", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.46", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.33", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.38", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.40", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.36", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.32", "rr_class" => 1, "rr_type" => 1},
+              {"name" => "google.com", "ipv4" => "173.194.46.34", "rr_class" => 1, "rr_type" => 1}
+            ]
+          )
+        end
       end
     end
 
@@ -108,57 +103,52 @@ describe Cikl::Worker::DNS::JobResult do
       before :each do
         job_result.handle_query_answer(query_aaaa, answer_aaaa)
       end
-      describe "#to_payload" do
+      describe "#payloads" do
         before :each do
-          @payload = job_result.to_payload
-        end
-        subject {@payload} 
-        it {should be_a(::String)}
-        context "when json decoded" do
-          before :each do
-            @decoded= MultiJson.load(@payload)
-          end
-          subject {@decoded}
-          its(["name"]) { should eq('google.com') }
-          its(["time"]) { should be_a(Integer) }
-          its(["rr"]) { should be_a(Array) }
-          context "rr" do
-            subject {@decoded["rr"]}
-            its([0]) { should eq(["google.com", 1, 0x1c, 300, "2607:f8b0:4009:803::1004"]) }
-          end
+          @payloads = job_result.payloads
         end
 
+        specify "there should be 1 payloads, total" do
+          expect(@payloads.length).to eq(1)
+        end
+
+        specify "the decoded payloads should match the proper AAAA records" do
+          decoded = @payloads.map {|payload| MultiJson.decode(payload) }
+          expect(decoded).to match_array(
+            [
+              {"name" => "google.com", "ipv6" => "2607:f8b0:4009:803::1004", "rr_class" => 1, "rr_type" => 28}
+            ]
+          )
+        end
       end
+
     end
 
     context "an MX query" do
       before :each do
         job_result.handle_query_answer(query_mx, answer_mx)
       end
-      describe "#to_payload" do
+      describe "#payloads" do
         before :each do
-          @payload = job_result.to_payload
-        end
-        subject {@payload} 
-        it {should be_a(::String)}
-        context "when json decoded" do
-          before :each do
-            @decoded= MultiJson.load(@payload)
-          end
-          subject {@decoded}
-          its(["name"]) { should eq('google.com') }
-          its(["time"]) { should be_a(Integer) }
-          its(["rr"]) { should be_a(Array) }
-          context "rr" do
-            subject {@decoded["rr"]}
-            its([0]) { should eq(["google.com", 1, 0xf, 600, "aspmx.l.google.com"]) }
-            its([1]) { should eq(["google.com", 1, 0xf, 600, "alt4.aspmx.l.google.com"]) }
-            its([2]) { should eq(["google.com", 1, 0xf, 600, "alt3.aspmx.l.google.com"]) }
-            its([3]) { should eq(["google.com", 1, 0xf, 600, "alt1.aspmx.l.google.com"]) }
-            its([4]) { should eq(["google.com", 1, 0xf, 600, "alt2.aspmx.l.google.com"]) }
-          end
+          @payloads = job_result.payloads
         end
 
+        specify "there should be 5 payloads, total" do
+          expect(@payloads.length).to eq(5)
+        end
+
+        specify "the decoded payloads should match the proper MX records" do
+          decoded = @payloads.map {|payload| MultiJson.decode(payload) }
+          expect(decoded).to match_array(
+            [
+              {"name" => "google.com", "mx" =>  "aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
+              {"name" => "google.com", "mx" =>  "alt4.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
+              {"name" => "google.com", "mx" =>  "alt3.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
+              {"name" => "google.com", "mx" =>  "alt1.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
+              {"name" => "google.com", "mx" =>  "alt2.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
+            ]
+          )
+        end
       end
     end
 

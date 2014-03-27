@@ -17,8 +17,8 @@ module AMQPSpec
       @value = job.value
     end
 
-    def to_payload
-      "processed: " + @value.to_s
+    def payloads
+      ["processed: " + @value.to_s]
     end
   end
 

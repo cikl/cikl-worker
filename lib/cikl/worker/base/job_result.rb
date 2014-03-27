@@ -2,8 +2,8 @@ module Cikl
   module Worker
     module Base
       module JobResult
-        # @return [String] returns a string version of the job result.
-        def to_payload
+        # @return [Array<String>] returns an array of string payloads
+        def payloads
           #:nocov:
           raise NotImplementedError.new
           #:nocov:
