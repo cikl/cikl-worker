@@ -1,4 +1,5 @@
 require 'cikl/worker/logging'
+require 'cikl/worker/exceptions'
 
 module Cikl
   module Worker
@@ -24,13 +25,17 @@ module Cikl
         end
 
         def handle_payload(payload, amqp, delivery_info)
-          on_finish_cb = Proc.new do |j, r|
-            #info "Finished: #{payload}"
-            amqp.ack(delivery_info) rescue nil
-            @processor.job_finished(j, r)
+          begin
+            on_finish_cb = Proc.new do |j, r|
+              #info "Finished: #{payload}"
+              amqp.ack(delivery_info) rescue nil
+              @processor.job_finished(j, r)
+            end
+            job = @builder.build(payload, :on_finish => on_finish_cb)
+            @processor.process_job(job)
+          rescue Cikl::Worker::Exceptions::JobBuildError => e
+            amqp.nack(delivery_info)
           end
-          job = @builder.build(payload, :on_finish => on_finish_cb)
-          @processor.process_job(job)
         end
       end
 
