@@ -74,6 +74,7 @@ module Cikl
           get_additional_a_for_names = Set.new
           in_scope_rrs.each do |name, ttl, rr|
             record = parse(name, ttl, rr)
+            record[:section] = :answer
             next if record.nil?
             @records << record
             case rr
@@ -90,6 +91,7 @@ module Cikl
           message.each_additional do |name, ttl, rr|
             if get_additional_a_for_names.include?(name)
               record = parse(name, ttl, rr)
+              record[:section] = :additional
               @records << record
             end
           end

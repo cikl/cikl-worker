@@ -54,15 +54,15 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              { "name" => 'google.com', 'fqdn' => 'ns1.google.com', "rr_class" => "IN", "rr_type" => "NS"},
-              { "name" => 'google.com', 'fqdn' => 'ns2.google.com', "rr_class" => "IN", "rr_type" => "NS"},
-              { "name" => 'google.com', 'fqdn' => 'ns3.google.com', "rr_class" => "IN", "rr_type" => "NS"},
-              { "name" => 'google.com', 'fqdn' => 'ns4.google.com', "rr_class" => "IN", "rr_type" => "NS"},
+              { "name" => 'google.com', 'fqdn' => 'ns1.google.com', "rr_class" => "IN", "rr_type" => "NS", "section" => "answer" },
+              { "name" => 'google.com', 'fqdn' => 'ns2.google.com', "rr_class" => "IN", "rr_type" => "NS", "section" => "answer" },
+              { "name" => 'google.com', 'fqdn' => 'ns3.google.com', "rr_class" => "IN", "rr_type" => "NS", "section" => "answer" },
+              { "name" => 'google.com', 'fqdn' => 'ns4.google.com', "rr_class" => "IN", "rr_type" => "NS", "section" => "answer" },
 
-              { "name" => 'ns3.google.com', 'ipv4' => '216.239.36.10', "rr_class" => "IN", "rr_type" => "A"},
-              { "name" => 'ns4.google.com', 'ipv4' => '216.239.38.10', "rr_class" => "IN", "rr_type" => "A"},
-              { "name" => 'ns1.google.com', 'ipv4' => '216.239.32.10', "rr_class" => "IN", "rr_type" => "A"},
-              { "name" => 'ns2.google.com', 'ipv4' => '216.239.34.10', "rr_class" => "IN", "rr_type" => "A"},
+              { "name" => 'ns3.google.com', 'ipv4' => '216.239.36.10', "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              { "name" => 'ns4.google.com', 'ipv4' => '216.239.38.10', "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              { "name" => 'ns1.google.com', 'ipv4' => '216.239.32.10', "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              { "name" => 'ns2.google.com', 'ipv4' => '216.239.34.10', "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
             ]
           )
         end
@@ -87,17 +87,17 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              {"name" => "google.com", "ipv4" => "173.194.46.35", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.41", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.39", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.37", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.46", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.33", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.38", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.40", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.36", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.32", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" => "google.com", "ipv4" => "173.194.46.34", "rr_class" => "IN", "rr_type" => "A"}
+              {"name" => "google.com", "ipv4" => "173.194.46.35", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.41", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.39", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.37", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.46", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.33", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.38", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.40", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.36", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.32", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" },
+              {"name" => "google.com", "ipv4" => "173.194.46.34", "rr_class" => "IN", "rr_type" => "A", "section" => "answer" }
             ]
           )
         end
@@ -121,7 +121,7 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              {"name" => "google.com", "ipv6" => "2607:f8b0:4009:803::1004", "rr_class" => "IN", "rr_type" => "AAAA"}
+              {"name" => "google.com", "ipv6" => "2607:f8b0:4009:803::1004", "rr_class" => "IN", "rr_type" => "AAAA", "section" => "answer" }
             ]
           )
         end
@@ -146,17 +146,17 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              {"name" => "google.com", "fqdn" =>  "aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
-              {"name" => "google.com", "fqdn" =>  "alt4.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
-              {"name" => "google.com", "fqdn" =>  "alt3.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
-              {"name" => "google.com", "fqdn" =>  "alt1.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
-              {"name" => "google.com", "fqdn" =>  "alt2.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
+              {"name" => "google.com", "fqdn" =>  "aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX", "section" => "answer" },
+              {"name" => "google.com", "fqdn" =>  "alt4.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX", "section" => "answer" },
+              {"name" => "google.com", "fqdn" =>  "alt3.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX", "section" => "answer" },
+              {"name" => "google.com", "fqdn" =>  "alt1.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX", "section" => "answer" },
+              {"name" => "google.com", "fqdn" =>  "alt2.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX", "section" => "answer" },
 
-              {"name" =>  "aspmx.l.google.com", "ipv4" => "74.125.142.26", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" =>  "alt4.aspmx.l.google.com", "ipv4" => "173.194.65.26", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" =>  "alt3.aspmx.l.google.com", "ipv4" => "173.194.67.26", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" =>  "alt1.aspmx.l.google.com", "ipv4" => "173.194.68.26", "rr_class" => "IN", "rr_type" => "A"},
-              {"name" =>  "alt2.aspmx.l.google.com", "ipv4" => "74.125.131.26", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" =>  "aspmx.l.google.com", "ipv4" => "74.125.142.26", "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              {"name" =>  "alt4.aspmx.l.google.com", "ipv4" => "173.194.65.26", "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              {"name" =>  "alt3.aspmx.l.google.com", "ipv4" => "173.194.67.26", "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              {"name" =>  "alt1.aspmx.l.google.com", "ipv4" => "173.194.68.26", "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
+              {"name" =>  "alt2.aspmx.l.google.com", "ipv4" => "74.125.131.26", "rr_class" => "IN", "rr_type" => "A", "section" => "additional" },
             ]
           )
         end
