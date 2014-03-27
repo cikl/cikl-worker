@@ -46,8 +46,8 @@ describe Cikl::Worker::DNS::JobResult do
           @payloads = job_result.payloads
         end
 
-        specify "there should be 4 payloads, total" do
-          expect(@payloads.length).to eq(4)
+        specify "there should be 8 payloads, total" do
+          expect(@payloads.length).to eq(8)
         end
 
         specify "the decoded payloads should match the proper NS records" do
@@ -58,6 +58,11 @@ describe Cikl::Worker::DNS::JobResult do
               { "name" => 'google.com', 'fqdn' => 'ns2.google.com', "rr_class" => "IN", "rr_type" => "NS"},
               { "name" => 'google.com', 'fqdn' => 'ns3.google.com', "rr_class" => "IN", "rr_type" => "NS"},
               { "name" => 'google.com', 'fqdn' => 'ns4.google.com', "rr_class" => "IN", "rr_type" => "NS"},
+
+              { "name" => 'ns3.google.com', 'ipv4' => '216.239.36.10', "rr_class" => "IN", "rr_type" => "A"},
+              { "name" => 'ns4.google.com', 'ipv4' => '216.239.38.10', "rr_class" => "IN", "rr_type" => "A"},
+              { "name" => 'ns1.google.com', 'ipv4' => '216.239.32.10', "rr_class" => "IN", "rr_type" => "A"},
+              { "name" => 'ns2.google.com', 'ipv4' => '216.239.34.10', "rr_class" => "IN", "rr_type" => "A"},
             ]
           )
         end
@@ -133,8 +138,8 @@ describe Cikl::Worker::DNS::JobResult do
           @payloads = job_result.payloads
         end
 
-        specify "there should be 5 payloads, total" do
-          expect(@payloads.length).to eq(5)
+        specify "there should be 10 payloads, total" do
+          expect(@payloads.length).to eq(10)
         end
 
         specify "the decoded payloads should match the proper MX records" do
@@ -146,6 +151,12 @@ describe Cikl::Worker::DNS::JobResult do
               {"name" => "google.com", "fqdn" =>  "alt3.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
               {"name" => "google.com", "fqdn" =>  "alt1.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
               {"name" => "google.com", "fqdn" =>  "alt2.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
+
+              {"name" =>  "aspmx.l.google.com", "ipv4" => "74.125.142.26", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" =>  "alt4.aspmx.l.google.com", "ipv4" => "173.194.65.26", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" =>  "alt3.aspmx.l.google.com", "ipv4" => "173.194.67.26", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" =>  "alt1.aspmx.l.google.com", "ipv4" => "173.194.68.26", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" =>  "alt2.aspmx.l.google.com", "ipv4" => "74.125.131.26", "rr_class" => "IN", "rr_type" => "A"},
             ]
           )
         end

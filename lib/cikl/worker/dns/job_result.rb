@@ -1,6 +1,7 @@
 require 'cikl/worker/base/job_result'
 require 'multi_json'
 require 'resolv'
+require 'set'
 
 module Cikl
   module Worker
@@ -14,7 +15,7 @@ module Cikl
           @records = []
         end
 
-        def push(name, ttl, rr)
+        def parse(name, ttl, rr)
           record = { 
             :name => name.to_s ,
             :rr_class => :IN,
@@ -39,13 +40,13 @@ module Cikl
             record[:rr_type] = :MX
           else 
             #:nocov:
-            return
+            return nil
             #:nocov:
           end
 
-          @records << record
+          record
         end
-        private :push
+        private :parse
 
         def handle_query_answer(query, answer)
           message = answer.to_resolv rescue nil
@@ -56,16 +57,40 @@ module Cikl
 
           klass = Resolv::DNS::Resource.get_class(query.rrtype, query.rrclass)
 
+          in_scope_rrs = []
           message.each_answer do |name, ttl, rr|
             next unless name == n 
             case rr
             when klass
-              push(name, ttl, rr)
+              in_scope_rrs << [name, ttl, rr]
             when Resolv::DNS::Resource::IN::CNAME
               #:nocov:
-              push(name, ttl, rr)
+              in_scope_rrs << [name, ttl, rr]
               n = name
               #:nocov:
+            end
+          end
+
+          get_additional_a_for_names = Set.new
+          in_scope_rrs.each do |name, ttl, rr|
+            record = parse(name, ttl, rr)
+            next if record.nil?
+            @records << record
+            case rr
+            when Resolv::DNS::Resource::IN::NS
+              get_additional_a_for_names << rr.name
+            when Resolv::DNS::Resource::IN::MX
+              get_additional_a_for_names << rr.exchange
+            end
+          end
+
+          return if get_additional_a_for_names.count == 0
+
+          # Now look for additional records that match the gathered names.
+          message.each_additional do |name, ttl, rr|
+            if get_additional_a_for_names.include?(name)
+              record = parse(name, ttl, rr)
+              @records << record
             end
           end
         end
