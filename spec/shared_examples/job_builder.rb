@@ -19,3 +19,14 @@ shared_examples_for "a job builder" do
     end
   end
 end
+
+shared_examples_for "a job builder encountering a bad payload" do
+  describe "#build" do
+    let(:metadata) { double('metadata') }
+    it "raise an exception" do
+      expect{ 
+        described_class.new.build(payload) 
+      }.to raise_error(Cikl::Worker::Exceptions::JobBuildError)
+    end
+  end
+end

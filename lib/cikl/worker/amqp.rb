@@ -23,9 +23,18 @@ module Cikl
 
       def start_acker
         Thread.new do
-          while delivery_info = @ack_queue.pop
-            break if delivery_info == :stop
-            delivery_info.channel.ack(delivery_info.delivery_tag)
+          while msg = @ack_queue.pop
+            op = msg[0]
+            case op
+            when :stop
+              break
+            when :ack
+              delivery_info = msg[1]
+              delivery_info.channel.ack(delivery_info.delivery_tag)
+            when :nack
+              delivery_info = msg[1]
+              delivery_info.channel.nack(delivery_info.delivery_tag, false)
+            end
           end
         end
       end
@@ -41,7 +50,7 @@ module Cikl
             warn "Terminated Consumer"
           end
           @consumers.clear
-          @ack_queue.push(:stop)
+          @ack_queue.push([:stop])
           if @acker_thread.join(2).nil?
             # :nocov:
             @acker_thread.kill
@@ -54,7 +63,11 @@ module Cikl
       end
 
       def ack(delivery_info)
-        @ack_queue.push(delivery_info)
+        @ack_queue.push([:ack, delivery_info])
+      end
+
+      def nack(delivery_info)
+        @ack_queue.push([:nack, delivery_info])
       end
 
       def register_consumer(consumer)

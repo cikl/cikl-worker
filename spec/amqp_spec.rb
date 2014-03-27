@@ -7,6 +7,7 @@ require 'cikl/worker/base/job_result'
 require 'cikl/worker/base/job_result_handler'
 require 'cikl/worker/base/processor'
 require 'cikl/worker/amqp'
+require 'cikl/worker/exceptions'
 require 'bunny'
 
 module AMQPSpec
@@ -40,6 +41,9 @@ module AMQPSpec
 
   class Builder < Cikl::Worker::Base::JobBuilder
     def build(payload, opts = {})
+      if payload == "RAISE_ERROR" 
+        raise Cikl::Worker::Exceptions::JobBuildError.new("raising an error")
+      end
       Job.new(payload, opts)
     end
   end
@@ -105,6 +109,7 @@ describe Cikl::Worker::AMQP do
         routing_key = @config[:jobs_routing_key]
         expected_payloads = []
         actual_payloads = []
+        expect(amqp).to receive(:ack).exactly(100).times.and_call_original
         100.times do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
@@ -114,6 +119,32 @@ describe Cikl::Worker::AMQP do
         sleep 1
         expect(@results_queue.message_count).to eq(100)
         100.times do
+          delivery_info, properties, payload = @results_queue.pop
+          actual_payloads << payload
+        end
+        expect(actual_payloads).to match_array(expected_payloads)
+      end
+
+      it "should nack payloads when an error occurs while building a job" do
+        expect(@results_queue.message_count).to eq(0)
+        routing_key = @config[:jobs_routing_key]
+        expected_payloads = []
+        actual_payloads = []
+        expect(amqp).to receive(:ack).exactly(50).times.and_call_original
+        expect(amqp).to receive(:nack).exactly(50).times.and_call_original
+        50.times do
+          payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
+          @channel.default_exchange.publish(payload, :routing_key => routing_key)
+          expected_payload = "processed: " + payload
+          expected_payloads << expected_payload
+        end
+        50.times do
+          payload = "RAISE_ERROR"
+          @channel.default_exchange.publish(payload, :routing_key => routing_key)
+        end
+        sleep 1
+        expect(@results_queue.message_count).to eq(50)
+        50.times do
           delivery_info, properties, payload = @results_queue.pop
           actual_payloads << payload
         end
