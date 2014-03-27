@@ -2,7 +2,7 @@ module Cikl
   module Worker
     module Base
       module JobResult
-        # @return [Array<String>] returns an array of string payloads
+        # @return [Array<Cikl::Worker::Base::JobResultPayload>] returns an array of payloads
         def payloads
           #:nocov:
           raise NotImplementedError.new

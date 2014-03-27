@@ -1,4 +1,6 @@
 require 'cikl/worker/base/job_result_handler'
+require 'multi_json'
+
 module Cikl
   module Worker
     module Base
@@ -19,7 +21,7 @@ module Cikl
         # @param [Cikl::Worker::Base::JobResult] job_result
         def handle_job_result(job_result)
           job_result.payloads.each do |payload|
-            @exchange.publish(payload, :routing_key => @routing_key)
+            @exchange.publish(MultiJson.dump(payload.to_hash), :routing_key => @routing_key)
           end
         end
       end

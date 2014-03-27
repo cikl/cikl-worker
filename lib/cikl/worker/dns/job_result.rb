@@ -29,7 +29,7 @@ module Cikl
 
           return nil if klass.nil?
 
-          return klass.new(name, ttl, rr)
+          return klass.from_rr(name, ttl, rr)
         end
         private :parse
 
@@ -52,7 +52,7 @@ module Cikl
             when Resolv::DNS::Resource::IN::CNAME
               #:nocov:
               payload = parse(name, ttl, rr)
-              n = name
+              n = rr.name
               #:nocov:
             end
             next if payload.nil?
@@ -80,7 +80,7 @@ module Cikl
         end
 
         def payloads
-          @payloads.map { |payload| MultiJson.dump(payload.to_hash) }
+          @payloads
         end
       end
 

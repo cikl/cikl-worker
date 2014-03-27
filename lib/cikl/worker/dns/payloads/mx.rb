@@ -6,9 +6,14 @@ module Cikl
       module Payloads
         class MX < Base
           attr_reader :fqdn
-          def initialize(name, ttl, rr)
+          def initialize(name, ttl, fqdn)
             super(name, ttl, :IN, :MX)
-            @fqdn = rr.exchange
+            @fqdn = fqdn
+          end
+
+          def ==(other)
+            super(other) &&
+              @fqdn == other.fqdn
           end
 
           # @return [Hash] a hash version of the payload.
@@ -16,6 +21,10 @@ module Cikl
             super().merge({
               :fqdn => @fqdn.to_s.downcase
             })
+          end
+
+          def self.from_rr(name, ttl, rr)
+            new(name, ttl, rr.exchange)
           end
         end
       end

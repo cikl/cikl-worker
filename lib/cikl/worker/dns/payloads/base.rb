@@ -13,12 +13,21 @@ module Cikl
             @section = :answer
           end
 
+          def ==(other)
+            @name == other.name &&
+              @rr_class == other.rr_class &&
+              @rr_type == other.rr_type &&
+              @section == other.section
+          end
+
           def answer!
             @section = :answer
+            return self
           end
 
           def additional!
             @section = :additional
+            return self
           end
 
           # @return [Hash] a hash version of the payload.
@@ -29,6 +38,9 @@ module Cikl
               :rr_type => @rr_type,
               :section => @section
             })
+          end
+
+          def self.from_rr(name, ttl, rr)
           end
         end
       end

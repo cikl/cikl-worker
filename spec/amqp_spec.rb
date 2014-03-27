@@ -6,11 +6,26 @@ require 'cikl/worker/base/job_builder'
 require 'cikl/worker/base/job_result'
 require 'cikl/worker/base/job_result_handler'
 require 'cikl/worker/base/processor'
+require 'cikl/worker/base/job_result_payload'
 require 'cikl/worker/amqp'
 require 'cikl/worker/exceptions'
 require 'bunny'
 
 module AMQPSpec
+  class Payload < Cikl::Worker::Base::JobResultPayload
+    attr_reader :value
+    def initialize(value)
+      @value = value
+    end
+
+    def ==(other)
+      @value == other.value
+    end
+
+    def to_hash
+      {:value => @value}
+    end
+  end
   class Result 
     include Cikl::Worker::Base::JobResult
     def initialize(job)
@@ -18,7 +33,7 @@ module AMQPSpec
     end
 
     def payloads
-      ["processed: " + @value.to_s]
+      [Payload.new("processed: " + @value.to_s)]
     end
   end
 
@@ -113,14 +128,14 @@ describe Cikl::Worker::AMQP do
         100.times do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
-          expected_payload = "processed: " + payload
+          expected_payload = {"value" => "processed: " + payload}
           expected_payloads << expected_payload
         end
         sleep 1
         expect(@results_queue.message_count).to eq(100)
         100.times do
           delivery_info, properties, payload = @results_queue.pop
-          actual_payloads << payload
+          actual_payloads << MultiJson.decode(payload)
         end
         expect(actual_payloads).to match_array(expected_payloads)
       end
@@ -135,7 +150,7 @@ describe Cikl::Worker::AMQP do
         50.times do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
-          expected_payload = "processed: " + payload
+          expected_payload = {"value" => "processed: " + payload}
           expected_payloads << expected_payload
         end
         50.times do
@@ -146,7 +161,7 @@ describe Cikl::Worker::AMQP do
         expect(@results_queue.message_count).to eq(50)
         50.times do
           delivery_info, properties, payload = @results_queue.pop
-          actual_payloads << payload
+          actual_payloads << MultiJson.decode(payload)
         end
         expect(actual_payloads).to match_array(expected_payloads)
       end
