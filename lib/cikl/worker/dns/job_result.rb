@@ -17,22 +17,26 @@ module Cikl
         def push(name, ttl, rr)
           record = { 
             :name => name.to_s ,
-            :rr_class => rr.class::ClassValue,
-            :rr_type => rr.class::TypeValue
+            :rr_class => :IN,
           }
           case rr
           when Resolv::DNS::Resource::IN::A
             record[:ipv4] = rr.address.to_s.downcase
+            record[:rr_type] = :A
           when Resolv::DNS::Resource::IN::AAAA
             record[:ipv6] = rr.address.to_s.downcase
+            record[:rr_type] = :AAAA
           when Resolv::DNS::Resource::IN::CNAME
             #:nocov:
-            record[:cname] = rr.name.to_s.downcase
+            record[:fqdn] = rr.name.to_s.downcase
+            record[:rr_type] = :CNAME
             #:nocov:
           when Resolv::DNS::Resource::IN::NS
-            record[:ns] = rr.name.to_s.downcase
+            record[:fqdn] = rr.name.to_s.downcase
+            record[:rr_type] = :NS
           when Resolv::DNS::Resource::IN::MX
-            record[:mx] = rr.exchange.to_s.downcase
+            record[:fqdn] = rr.exchange.to_s.downcase
+            record[:rr_type] = :MX
           else 
             #:nocov:
             return

@@ -54,10 +54,10 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              { "name" => 'google.com', 'ns' => 'ns1.google.com', "rr_class" => 1, "rr_type" => 2},
-              { "name" => 'google.com', 'ns' => 'ns2.google.com', "rr_class" => 1, "rr_type" => 2},
-              { "name" => 'google.com', 'ns' => 'ns3.google.com', "rr_class" => 1, "rr_type" => 2},
-              { "name" => 'google.com', 'ns' => 'ns4.google.com', "rr_class" => 1, "rr_type" => 2},
+              { "name" => 'google.com', 'fqdn' => 'ns1.google.com', "rr_class" => "IN", "rr_type" => "NS"},
+              { "name" => 'google.com', 'fqdn' => 'ns2.google.com', "rr_class" => "IN", "rr_type" => "NS"},
+              { "name" => 'google.com', 'fqdn' => 'ns3.google.com', "rr_class" => "IN", "rr_type" => "NS"},
+              { "name" => 'google.com', 'fqdn' => 'ns4.google.com', "rr_class" => "IN", "rr_type" => "NS"},
             ]
           )
         end
@@ -82,17 +82,17 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              {"name" => "google.com", "ipv4" => "173.194.46.35", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.41", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.39", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.37", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.46", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.33", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.38", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.40", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.36", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.32", "rr_class" => 1, "rr_type" => 1},
-              {"name" => "google.com", "ipv4" => "173.194.46.34", "rr_class" => 1, "rr_type" => 1}
+              {"name" => "google.com", "ipv4" => "173.194.46.35", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.41", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.39", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.37", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.46", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.33", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.38", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.40", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.36", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.32", "rr_class" => "IN", "rr_type" => "A"},
+              {"name" => "google.com", "ipv4" => "173.194.46.34", "rr_class" => "IN", "rr_type" => "A"}
             ]
           )
         end
@@ -116,7 +116,7 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              {"name" => "google.com", "ipv6" => "2607:f8b0:4009:803::1004", "rr_class" => 1, "rr_type" => 28}
+              {"name" => "google.com", "ipv6" => "2607:f8b0:4009:803::1004", "rr_class" => "IN", "rr_type" => "AAAA"}
             ]
           )
         end
@@ -141,11 +141,11 @@ describe Cikl::Worker::DNS::JobResult do
           decoded = @payloads.map {|payload| MultiJson.decode(payload) }
           expect(decoded).to match_array(
             [
-              {"name" => "google.com", "mx" =>  "aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
-              {"name" => "google.com", "mx" =>  "alt4.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
-              {"name" => "google.com", "mx" =>  "alt3.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
-              {"name" => "google.com", "mx" =>  "alt1.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
-              {"name" => "google.com", "mx" =>  "alt2.aspmx.l.google.com", "rr_class" => 1, "rr_type" => 15},
+              {"name" => "google.com", "fqdn" =>  "aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
+              {"name" => "google.com", "fqdn" =>  "alt4.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
+              {"name" => "google.com", "fqdn" =>  "alt3.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
+              {"name" => "google.com", "fqdn" =>  "alt1.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
+              {"name" => "google.com", "fqdn" =>  "alt2.aspmx.l.google.com", "rr_class" => "IN", "rr_type" => "MX"},
             ]
           )
         end
