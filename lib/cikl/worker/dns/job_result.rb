@@ -15,37 +15,31 @@ module Cikl
         end
 
         def push(name, ttl, rr)
-          ret = [
-            name.to_s,
-            rr.class::ClassValue,
-            rr.class::TypeValue,
-            ttl
-          ]
-          ret2 = { 
+          record = { 
             :name => name.to_s ,
             :rr_class => rr.class::ClassValue,
             :rr_type => rr.class::TypeValue
           }
           case rr
           when Resolv::DNS::Resource::IN::A
-            ret2[:ipv4] = rr.address.to_s.downcase
+            record[:ipv4] = rr.address.to_s.downcase
           when Resolv::DNS::Resource::IN::AAAA
-            ret2[:ipv6] = rr.address.to_s.downcase
+            record[:ipv6] = rr.address.to_s.downcase
           when Resolv::DNS::Resource::IN::CNAME
             #:nocov:
-            ret2[:cname] = rr.name.to_s.downcase
+            record[:cname] = rr.name.to_s.downcase
             #:nocov:
           when Resolv::DNS::Resource::IN::NS
-            ret2[:ns] = rr.name.to_s.downcase
+            record[:ns] = rr.name.to_s.downcase
           when Resolv::DNS::Resource::IN::MX
-            ret2[:mx] = rr.exchange.to_s.downcase
+            record[:mx] = rr.exchange.to_s.downcase
           else 
             #:nocov:
             return
             #:nocov:
           end
 
-          @records << ret2
+          @records << record
         end
         private :push
 
