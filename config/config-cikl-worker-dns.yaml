@@ -1,6 +1,6 @@
 ---
 :jobs_routing_key: 'cikl.resolve_fqdn'
-:results_routing_key: 'cikl.fqdn'
+:results_routing_key: 'cikl.dns_answer'
 :amqp:
   :username: guest
   :password: guest

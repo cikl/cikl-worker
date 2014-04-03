@@ -12,7 +12,7 @@ module Cikl
         def to_hash
           ret = {}
           ret[:worker] = @worker_name unless @worker_name.nil?
-          ret[:time] = @time.iso8601 unless @time.nil?
+          ret[:@timestamp] = @time.iso8601 unless @time.nil?
           ret
         end
 
