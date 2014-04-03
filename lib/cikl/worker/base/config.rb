@@ -28,16 +28,8 @@ module Cikl
                         :required => true
 
           config.define :worker_name,
-                        :type => String,
                         :description => "The name of the worker",
-                        :env_var => 'HOSTNAME',
-                        :finally => lambda { |c|
-                          # :nocov:
-                          if c[:worker_name].nil?
-                            c[:worker_name] = Socket.gethostname || 'unknown'
-                          end
-                          # :nocov:
-                        }
+                        :default => ENV['HOSTNAME'] || Socket.gethostname || 'unknown'
 
 
           config.define "amqp.host",
