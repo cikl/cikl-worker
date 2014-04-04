@@ -8,10 +8,6 @@ require 'cikl/worker/dns/resolver'
 require 'cikl/worker/base/consumer'
 require 'cikl/worker/amqp'
 
-#Celluloid.task_class = Celluloid::TaskThread
-
-#Celluloid.logger.level = Logger::WARN
-
 lambda do
   config = Cikl::Worker::DNS::Config.create_config(WorkerEnvironment::APP_ROOT)
   config.use :config_file
