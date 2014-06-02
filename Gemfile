@@ -11,7 +11,7 @@ gem 'jrjackson', :platforms => 'jruby'
 group :test do
   gem 'rake'
   gem 'simplecov'
-  gem 'rspec'
+  gem 'rspec', "~> 2"
 end
 
 group :development do
