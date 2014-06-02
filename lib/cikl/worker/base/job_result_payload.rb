@@ -11,6 +11,7 @@ module Cikl
         # @return [Hash] a hash version of the payload.
         def to_hash
           ret = {}
+          ret[:source] = "cikl-worker"
           ret[:worker] = @worker_name unless @worker_name.nil?
           ret[:@timestamp] = @time.iso8601 unless @time.nil?
           ret

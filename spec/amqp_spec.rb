@@ -132,6 +132,7 @@ describe Cikl::Worker::AMQP do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
           expected_payload = {
+            "source" => "cikl-worker",
             "value" => "processed: " + payload,
             "worker" => @worker_name,
             "@timestamp" => kind_of(String)
@@ -159,6 +160,7 @@ describe Cikl::Worker::AMQP do
           payload = "Secret message: #{Random.rand(1_000_000)} #{Random.rand(1_000_000)}"
           @channel.default_exchange.publish(payload, :routing_key => routing_key)
           expected_payload = {
+            "source" => "cikl-worker",
             "value" => "processed: " + payload,
             "worker" => @worker_name,
             "@timestamp" => kind_of(String)
