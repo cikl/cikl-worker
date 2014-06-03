@@ -75,7 +75,7 @@ module Cikl
             sleep @network_recovery_interval
             retry
           else 
-            raise e
+            raise Cikl::Worker::Exceptions::AMQPConnectionFailed
           end
         end
         info "RabbitMQ connection established"

@@ -103,10 +103,10 @@ describe Cikl::Worker::AMQP do
         config[:amqp][:recover_from_connection_close] = false
       end
 
-      it "should raise Bunny::TCPConnectionFailed if it cannot connect to the server" do
+      it "should raise AMQPConnectionFailed if it cannot connect to the server" do
         expect do
           amqp.start
-        end.to raise_error(Bunny::TCPConnectionFailed)
+        end.to raise_error(Cikl::Worker::Exceptions::AMQPConnectionFailed)
       end
     end
 
@@ -117,10 +117,10 @@ describe Cikl::Worker::AMQP do
         config[:amqp][:network_recovery_interval] = 1.0
       end
 
-      it "should raise Bunny::TCPConnectionFailed if it cannot connect to the server" do
+      it "should raise AMQPConnectionFailed if it cannot connect to the server" do
         expect do
           amqp.start
-        end.to raise_error(Bunny::TCPConnectionFailed)
+        end.to raise_error(Cikl::Worker::Exceptions::AMQPConnectionFailed)
       end
     end
   end

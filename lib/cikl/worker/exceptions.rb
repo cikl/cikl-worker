@@ -9,6 +9,9 @@ module Cikl
       class AMQPError < StandardError
       end
 
+      class AMQPConnectionFailed < AMQPError
+      end
+
       class AMQPNotStarted < AMQPError
       end
 
