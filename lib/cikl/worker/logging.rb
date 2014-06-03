@@ -10,7 +10,7 @@ module Cikl
     end
     lambda do
       _logger = ::Logger.new(STDERR)
-      _logger.level = ::Logger::WARN
+      _logger.level = ::Logger::INFO
       #_logger.level = ::Logger::DEBUG
       Cikl::Worker.logger = _logger
     end.call()

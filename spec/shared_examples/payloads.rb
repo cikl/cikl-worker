@@ -2,12 +2,37 @@ require 'spec_helper'
 
 shared_examples_for "a dns payload" do
   # Expacts :payload
-  # Expacts :payload_clone
-  # Expacts :payload_diff
+  let(:worker_name) { "myname" }
+  let(:timestamp) { DateTime.now }
+  before :each do
+    payload.stamp(worker_name, timestamp)
+  end
   subject { payload }
   its(:name) { should be_a(Resolv::DNS::Name) }
   its(:rr_class) { should eq(rr_class) }
   its(:rr_type) { should eq(rr_type) }
+
+  context "#dns_answer" do
+    subject {payload.dns_answer}
+    its([:name]) {should == name }
+    its([:rr_class]) {should == rr_class}
+    its([:rr_type]) {should == rr_type}
+    its([:resolver]) { should eq(worker_name) }
+  end
+
+  context "#to_hash" do
+    subject {payload.to_hash}
+    its([:observables]) {should ==  {:dns_answer => [ payload.dns_answer ] } }
+  end
+
+  it_should_behave_like "a payload"
+end
+
+shared_examples_for "a payload" do
+  # Expacts :payload
+  # Expacts :payload_clone
+  # Expacts :payload_diff
+  # Expacts :timestamp
 
   describe "#==" do
     it "should == itself" do
@@ -21,14 +46,8 @@ shared_examples_for "a dns payload" do
     end
   end
   context "#to_hash" do
-    let(:payload) { 
-      described_class.new(Resolv::DNS::Name.create("google.com."), 1234, Resolv::IPv4.create("1.2.3.4"))
-    }
-
     subject {payload.to_hash}
-    its([:name]) {should == name }
-    its([:rr_class]) {should == rr_class}
-    its([:rr_type]) {should == rr_type}
-
+    its([:source]) { should == "cikl-worker" }
+    its([:@timestamp]) { should == timestamp.iso8601 }
   end
 end

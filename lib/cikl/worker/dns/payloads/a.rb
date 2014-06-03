@@ -17,7 +17,7 @@ module Cikl
           end
 
           # @return [Hash] a hash version of the payload.
-          def to_hash
+          def dns_answer
             super().merge({
               :ipv4 => @ipv4.to_s
             })

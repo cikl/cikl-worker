@@ -22,6 +22,7 @@ lambda do
   config.resolve!
 
   amqp = Cikl::Worker::AMQP.new(config)
+  amqp.start
   job_builder = Cikl::Worker::DNS::JobBuilder.new
   resolver = Cikl::Worker::DNS::Resolver.new(config)
   processor = Cikl::Worker::DNS::Processor.new(resolver, amqp.job_result_handler, config)

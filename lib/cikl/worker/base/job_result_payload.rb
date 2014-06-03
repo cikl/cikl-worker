@@ -4,6 +4,7 @@ module Cikl
   module Worker
     module Base
       class JobResultPayload
+        attr_reader :worker_name, :time
         def initialize()
           @worker_name = nil
           @time = nil
@@ -11,7 +12,7 @@ module Cikl
         # @return [Hash] a hash version of the payload.
         def to_hash
           ret = {}
-          ret[:worker] = @worker_name unless @worker_name.nil?
+          ret[:source] = "cikl-worker"
           ret[:@timestamp] = @time.iso8601 unless @time.nil?
           ret
         end
