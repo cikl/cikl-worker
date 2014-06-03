@@ -68,13 +68,22 @@ end
 describe Cikl::Worker::AMQP do
   include WorkerHelper
 
+  let(:config) {
+    Cikl::Worker::Base::Config.create_config(WorkerHelper::PROJECT_ROOT)
+  }
+
+  let(:amqp) { 
+    described_class.new(config) 
+  }
+
+  let(:worker_name) { "my_worker_name" }
+
   before :each do
     @worker_name = "my_worker_name"
-    @config = Cikl::Worker::Base::Config.create_config(WorkerHelper::PROJECT_ROOT)
-    @config.worker_name = @worker_name
+    config.worker_name = worker_name
     now = Time.now.to_f
-    @config[:jobs_routing_key] = "cikl.testing.#{now.to_s}.jobs"
-    @config[:results_routing_key] = "cikl.testing.#{now.to_s}.results"
+    config[:jobs_routing_key] = "cikl.testing.#{now.to_s}.jobs"
+    config[:results_routing_key] = "cikl.testing.#{now.to_s}.results"
 
     @old_logger = Cikl::Worker.logger
     Cikl::Worker.logger = nil
@@ -86,46 +95,55 @@ describe Cikl::Worker::AMQP do
 
   context "when failing to connect" do
     before :each do
-      @config[:amqp][:port] = @config[:amqp][:port] + 1
+      config[:amqp][:port] = config[:amqp][:port] + 1
     end
 
     context "with recover_from_connection_close set to false" do
       before :each do
-        @config[:amqp][:recover_from_connection_close] = false
+        config[:amqp][:recover_from_connection_close] = false
       end
 
       it "should raise Bunny::TCPConnectionFailed if it cannot connect to the server" do
         expect do
-          described_class.new(@config)
+          amqp.start
         end.to raise_error(Bunny::TCPConnectionFailed)
       end
     end
 
     context "with recover_from_connection_close set to true" do
       before :each do
-        @config[:amqp][:recover_from_connection_close] = true
-        @config[:amqp][:max_recovery_attempts] = 2
-        @config[:amqp][:network_recovery_interval] = 1.0
+        config[:amqp][:recover_from_connection_close] = true
+        config[:amqp][:max_recovery_attempts] = 2
+        config[:amqp][:network_recovery_interval] = 1.0
       end
 
       it "should raise Bunny::TCPConnectionFailed if it cannot connect to the server" do
         expect do
-          described_class.new(@config)
+          amqp.start
         end.to raise_error(Bunny::TCPConnectionFailed)
       end
     end
   end
 
-  describe "when initialized" do
+  describe "#job_result_handler" do
+    it "should raise a AMQPNotStarted exception if it hasn't been started" do
+      expect {
+        amqp.job_result_handler
+      }.to raise_error(Cikl::Worker::Exceptions::AMQPNotStarted)
+    end
+  end
+
+  describe "when started" do
     before :each do
-      @bunny = Bunny.new(@config[:amqp])
+      @bunny = Bunny.new(config[:amqp])
       @bunny.start
       @channel = @bunny.create_channel
-      @results_queue = @channel.queue(@config[:results_routing_key], :auto_delete => true)
+      @results_queue = @channel.queue(config[:results_routing_key], :auto_delete => true)
+      amqp.start
     end
 
     after :each do
-      @channel.queue_delete(@config[:jobs_routing_key])
+      @channel.queue_delete(config[:jobs_routing_key])
       @results_queue.delete()
       @bunny.close
     end
@@ -134,17 +152,31 @@ describe Cikl::Worker::AMQP do
       amqp.stop
     end
 
-    let!(:amqp) { described_class.new(@config) }
     let(:builder) { AMQPSpec::Builder.new }
-    let(:processor) { AMQPSpec::Processor.new(amqp.job_result_handler, @config)}
-    let(:consumer) { Cikl::Worker::Base::Consumer.new(processor, builder, @config) }
+    let(:processor) { AMQPSpec::Processor.new(amqp.job_result_handler, config)}
+    let(:consumer) { Cikl::Worker::Base::Consumer.new(processor, builder, config) }
 
+    
+    describe "#start" do
+      it "should raise an AMQPAlreadyStarted exception" do
+        expect {
+          amqp.start
+        }.to raise_error(Cikl::Worker::Exceptions::AMQPAlreadyStarted)
+      end
+    end
+    describe "#job_result_handler" do
+      it "should not raise an exception" do
+        expect {
+          amqp.job_result_handler
+        }.not_to raise_error
+      end
+    end
     describe "#register_consumer" do
       it "should create a queue named for :jobs_routing_key and subscribe to it" do
-        expect(@bunny.queue_exists?(@config[:jobs_routing_key])).to be_false
+        expect(@bunny.queue_exists?(config[:jobs_routing_key])).to be_false
         amqp.register_consumer(consumer)
-        expect(@bunny.queue_exists?(@config[:jobs_routing_key])).to be_true
-        queue = @channel.queue(@config[:jobs_routing_key], :passive => true)
+        expect(@bunny.queue_exists?(config[:jobs_routing_key])).to be_true
+        queue = @channel.queue(config[:jobs_routing_key], :passive => true)
         expect(queue.status[:consumer_count]).to eq(1)
       end
     end
@@ -156,7 +188,7 @@ describe Cikl::Worker::AMQP do
 
       it "should consume data, process it, and put results in the results queue" do
         expect(@results_queue.message_count).to eq(0)
-        routing_key = @config[:jobs_routing_key]
+        routing_key = config[:jobs_routing_key]
         expected_payloads = []
         actual_payloads = []
         expect(amqp).to receive(:ack).exactly(100).times.and_call_original
@@ -182,7 +214,7 @@ describe Cikl::Worker::AMQP do
 
       it "should nack payloads when an error occurs while building a job" do
         expect(@results_queue.message_count).to eq(0)
-        routing_key = @config[:jobs_routing_key]
+        routing_key = config[:jobs_routing_key]
         expected_payloads = []
         actual_payloads = []
         expect(amqp).to receive(:ack).exactly(1).times.and_call_original

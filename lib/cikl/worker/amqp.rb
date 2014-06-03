@@ -1,4 +1,5 @@
 require 'bunny'
+require 'cikl/worker/exceptions'
 require 'cikl/worker/logging'
 require 'cikl/worker/base/job_result_amqp_producer'
 require 'thread'
@@ -7,25 +8,46 @@ module Cikl
   module Worker
     class AMQP
       include Cikl::Worker::Logging
-      attr_reader :job_result_handler
 
       def initialize(config)
-        info "Starting Cikl::Worker::AMQP"
-        @bunny = start_bunny(config)
-        @job_result_handler = 
-          Cikl::Worker::Base::JobResultAMQPProducer.new(
-            @bunny.default_channel.default_exchange, 
-            config[:results_routing_key],
-            config[:worker_name]
-        )
+        @state = :init
+        @recover_from_connection_close = config[:amqp][:recover_from_connection_close]
+        @network_recovery_interval = config[:amqp][:network_recovery_interval]
+        @max_recovery_attempts = config[:amqp][:max_recovery_attempts]
+        @results_routing_key = config[:results_routing_key]
+        @worker_name = config[:worker_name]
+
+        @bunny = init_bunny(config[:amqp])
         @consumers = []
         @ack_queue = Queue.new
         @acker_thread = start_acker()
         @mutex = Mutex.new
       end
 
-      def start_bunny(config)
-        amqp_config = config[:amqp]
+      def start
+        @mutex.synchronize do
+          unless @state == :init
+            raise Cikl::Worker::Exceptions::AMQPAlreadyStarted.new
+          end
+          info "Starting Cikl::Worker::AMQP"
+          start_bunny()
+          @state = :started
+        end
+      end
+
+      def job_result_handler
+        unless @state == :started
+          raise Cikl::Worker::Exceptions::AMQPNotStarted.new
+        end
+        @job_result_handler ||= 
+          Cikl::Worker::Base::JobResultAMQPProducer.new(
+            @bunny.default_channel.default_exchange, 
+            @results_routing_key,
+            @worker_name
+        )
+      end
+
+      def init_bunny(amqp_config)
         bunny_config = {
           :host => amqp_config[:host],
           :port => amqp_config[:port],
@@ -36,25 +58,27 @@ module Cikl
           :recover_from_connection_close => amqp_config[:recover_from_connection_close],
           :network_recovery_interval => amqp_config[:network_recovery_interval]
         }
-        bunny = Bunny.new(bunny_config)
-        max_reconnects = amqp_config[:max_recovery_attempts]
+        Bunny.new(bunny_config)
+      end
+      private :init_bunny
+
+      def start_bunny()
         reconnect_counter = 0
         begin
-          bunny.start
+          @bunny.start
         rescue Bunny::TCPConnectionFailed => e
           error "Failed to connect to RabbitMQ service: #{e.message}"
           reconnect_counter += 1
 
-          if (config[:amqp][:recover_from_connection_close] == true) && (max_reconnects.nil? or (reconnect_counter <= max_reconnects))
-            info "Retrying connection in #{config[:amqp][:network_recovery_interval]} seconds"
-            sleep config[:amqp][:network_recovery_interval]
+          if (@recover_from_connection_close == true) && (@max_recovery_attempts.nil? or (reconnect_counter <= @max_recovery_attempts))
+            info "Retrying connection in #{@network_recovery_interval} seconds"
+            sleep @network_recovery_interval
             retry
           else 
             raise e
           end
         end
         info "RabbitMQ connection established"
-        bunny
       end
       private :start_bunny
 
@@ -75,6 +99,7 @@ module Cikl
           end
         end
       end
+      private :start_acker
 
       def stop
         info "Stopping Cikl::Worker::AMQP"
@@ -97,6 +122,7 @@ module Cikl
 
           @bunny.close
           @bunny = nil
+          @state = :stopped
         end
         info "Cikl::Worker::AMQP done"
       end
