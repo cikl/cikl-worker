@@ -53,6 +53,21 @@ module Cikl
                         :type => :boolean,
                         :default => false
 
+          config.define "amqp.recover_from_connection_close",
+                        :description => "Retry closed connections",
+                        :type => :boolean,
+                        :default => true
+
+          config.define "amqp.network_recovery_interval",
+                        :description => "Retry interval",
+                        :type => Float,
+                        :default => 3.0
+
+          config.define "amqp.max_recovery_attempts",
+                        :description => "Maximum number of times to re-attempt connectivity. If nil, go on forever",
+                        :type => Integer,
+                        :default => nil
+
           config
         end
       end

@@ -68,7 +68,7 @@ end
 describe Cikl::Worker::AMQP do
   include WorkerHelper
 
-  before :all do
+  before :each do
     @worker_name = "my_worker_name"
     @config = Cikl::Worker::Base::Config.create_config(WorkerHelper::PROJECT_ROOT)
     @config.worker_name = @worker_name
@@ -80,24 +80,56 @@ describe Cikl::Worker::AMQP do
     Cikl::Worker.logger = nil
   end
 
-  after :all do
+  after :each do
     Cikl::Worker.logger = @old_logger
   end
 
-  before :each do
-    @bunny = Bunny.new(@config[:amqp])
-    @bunny.start
-    @channel = @bunny.create_channel
-    @results_queue = @channel.queue(@config[:results_routing_key], :auto_delete => true)
-  end
+  context "when failing to connect" do
+    before :each do
+      @config[:amqp][:port] = @config[:amqp][:port] + 1
+    end
 
-  after :each do
-    @channel.queue_delete(@config[:jobs_routing_key])
-    @results_queue.delete()
-    @bunny.close
+    context "with recover_from_connection_close set to false" do
+      before :each do
+        @config[:amqp][:recover_from_connection_close] = false
+      end
+
+      it "should raise Bunny::TCPConnectionFailed if it cannot connect to the server" do
+        expect do
+          described_class.new(@config)
+        end.to raise_error(Bunny::TCPConnectionFailed)
+      end
+    end
+
+    context "with recover_from_connection_close set to true" do
+      before :each do
+        @config[:amqp][:recover_from_connection_close] = true
+        @config[:amqp][:max_recovery_attempts] = 2
+        @config[:amqp][:network_recovery_interval] = 1.0
+      end
+
+      it "should raise Bunny::TCPConnectionFailed if it cannot connect to the server" do
+        expect do
+          described_class.new(@config)
+        end.to raise_error(Bunny::TCPConnectionFailed)
+      end
+    end
   end
 
   describe "when initialized" do
+    before :each do
+      @bunny = Bunny.new(@config[:amqp])
+      @bunny.start
+      @channel = @bunny.create_channel
+      @results_queue = @channel.queue(@config[:results_routing_key], :auto_delete => true)
+    end
+
+    after :each do
+      @channel.queue_delete(@config[:jobs_routing_key])
+      @results_queue.delete()
+      @bunny.close
+    end
+
     after :each do
       amqp.stop
     end
