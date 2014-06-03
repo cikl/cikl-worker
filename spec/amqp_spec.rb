@@ -107,6 +107,7 @@ describe Cikl::Worker::AMQP do
         expect do
           amqp.start
         end.to raise_error(Cikl::Worker::Exceptions::AMQPConnectionFailed)
+        expect(amqp.failed_connection_attempts).to eq(1)
       end
     end
 
@@ -121,6 +122,7 @@ describe Cikl::Worker::AMQP do
         expect do
           amqp.start
         end.to raise_error(Cikl::Worker::Exceptions::AMQPConnectionFailed)
+        expect(amqp.failed_connection_attempts).to eq(3)
       end
     end
   end

@@ -8,6 +8,7 @@ module Cikl
   module Worker
     class AMQP
       include Cikl::Worker::Logging
+      attr_reader :failed_connection_attempts
 
       def initialize(config)
         @state = :init
@@ -22,6 +23,7 @@ module Cikl
         @ack_queue = Queue.new
         @acker_thread = start_acker()
         @mutex = Mutex.new
+        @failed_connection_attempts = 0
       end
 
       def start
@@ -63,14 +65,14 @@ module Cikl
       private :init_bunny
 
       def start_bunny()
-        reconnect_counter = 0
+        @failed_connection_attempts = 0
         begin
           @bunny.start
         rescue Bunny::TCPConnectionFailed => e
           error "Failed to connect to RabbitMQ service: #{e.message}"
-          reconnect_counter += 1
+          @failed_connection_attempts += 1
 
-          if (@recover_from_connection_close == true) && (@max_recovery_attempts.nil? or (reconnect_counter <= @max_recovery_attempts))
+          if (@recover_from_connection_close == true) && (@max_recovery_attempts.nil? || (@failed_connection_attempts <= @max_recovery_attempts))
             info "Retrying connection in #{@network_recovery_interval} seconds"
             sleep @network_recovery_interval
             retry
