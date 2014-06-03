@@ -17,7 +17,7 @@ module Cikl
           end
 
           # @return [Hash] a hash version of the payload.
-          def to_hash
+          def dns_answer
             super().merge({
               :ipv6 => @ipv6.to_s.downcase
             })

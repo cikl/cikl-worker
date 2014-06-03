@@ -19,12 +19,12 @@ describe Cikl::Worker::DNS::Payloads::A do
     }
   end
 
-  context "#to_hash" do
+  context "#dns_answer" do
     let(:payload) { 
       described_class.new(Resolv::DNS::Name.create("google.com."), 1234, Resolv::IPv4.create("1.2.3.4"))
     }
 
-    subject {payload.to_hash}
+    subject {payload.dns_answer}
     its([:ipv4]) {should == '1.2.3.4'}
 
   end

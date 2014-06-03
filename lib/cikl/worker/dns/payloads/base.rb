@@ -30,14 +30,24 @@ module Cikl
             return self
           end
 
-          # @return [Hash] a hash version of the payload.
-          def to_hash
-            super().merge({
+          def dns_answer
+            ret = {
               :name => @name.to_s,
               :rr_class => @rr_class,
               :rr_type => @rr_type,
               :section => @section
-            })
+            }
+            ret[:resolver] = self.worker_name unless self.worker_name.nil?
+            ret
+          end
+
+          # @return [Hash] a hash version of the payload.
+          def to_hash
+            ret = super()
+            o = ret[:observables] ||= {}
+            a = o[:dns_answer] ||= []
+            a << self.dns_answer()
+            ret
           end
 
           def self.from_rr(name, ttl, rr)

@@ -19,12 +19,12 @@ describe Cikl::Worker::DNS::Payloads::AAAA do
     }
   end
 
-  context "#to_hash" do
+  context "#dns_answer" do
     let(:payload) { 
       described_class.new(Resolv::DNS::Name.create("google.com."), 1234, Resolv::IPv6.create("2607:f8b0:4009:803::1004"))
     }
 
-    subject {payload.to_hash}
+    subject {payload.dns_answer}
     its([:ipv6]) {should == '2607:f8b0:4009:803::1004'}
 
   end
