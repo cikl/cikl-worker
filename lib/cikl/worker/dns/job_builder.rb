@@ -16,8 +16,8 @@ module Cikl
         # @return job [Cikl::Worker::DNS::Job] A job
         def build(payload, opts = {})
           begin
-            cikl_event = MultiJson.decode(payload)
-            fqdn = cikl_event["address"]["fqdn"]
+            data = MultiJson.decode(payload)
+            fqdn = data["fqdn"]
             if fqdn.nil?
               raise JobBuildError.new("Missing fqdn")
             end
