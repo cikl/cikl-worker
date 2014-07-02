@@ -1,7 +1,0 @@
-res/
-*.swp
-*.swo
-.bundle
-.gem
-coverage
-pkg/
